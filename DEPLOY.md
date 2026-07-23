@@ -4,9 +4,7 @@ The site is the repo. GitHub Pages serves the files on the `main` branch exactly
 as they are — there is no build, no Actions workflow, nothing to go wrong
 between pushing and the site changing.
 
-> **Placeholder:** `YOUR-USERNAME` below is your GitHub username. It appears in
-> two places in the one-time setup and in the site URL. Replace it, or ask me to
-> and I'll write the real value in.
+Your site: **https://kh112.github.io/fitness-tracker/**
 
 ---
 
