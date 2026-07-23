@@ -60,6 +60,23 @@ function syncTabs() {
   );
 }
 
+/* Register the service worker that makes the app launch offline.
+ *
+ * Silently absent over plain http://<lan-ip> during development — service
+ * workers require a secure context, and localhost and the deployed HTTPS site
+ * are the two places it runs. Nothing else depends on it, so the app is fully
+ * usable either way. */
+async function registerServiceWorker() {
+  if (!('serviceWorker' in navigator)) return;
+  try {
+    // Resolved against this module's URL so it points at the repo root
+    // regardless of the subpath the site is served from.
+    await navigator.serviceWorker.register(new URL('../sw.js', import.meta.url));
+  } catch (err) {
+    console.warn('Service worker registration failed:', err);
+  }
+}
+
 /* iOS can evict storage for web apps that go unused. Persistent storage makes
    that less likely; the export button (later milestone) is the real backstop. */
 async function requestPersistence() {
@@ -81,4 +98,5 @@ if (!routes.some((r) => r.path === location.hash)) {
 }
 
 renderRoute();
+registerServiceWorker();
 requestPersistence();
