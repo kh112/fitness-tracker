@@ -9,7 +9,7 @@ import * as db from '../db.js';
 import { weightChart } from '../chart.js';
 import { toast, confirmDialog, sheet, icon } from '../ui.js';
 import {
-  el, todayISO, addDays, daysBetween, fmtDate, fmtDateRelative,
+  el, mount, todayISO, addDays, daysBetween, fmtDate, fmtDateRelative,
   fmtKg, fmtDelta, isValidISO, rollingAverage,
 } from '../util.js';
 
@@ -26,7 +26,7 @@ let chartHost = null;   // element the chart is drawn into
 export async function render(view) {
   rows = await db.listWeights();
 
-  view.replaceChildren(
+  mount(view, 
     el('div', { class: 'stack' },
       heroSection(),
       chartSection(),
@@ -174,7 +174,7 @@ function drawChart() {
   const from = points[0]?.date;
   const avg = from ? fullAvg.filter((a) => a.date >= from) : [];
 
-  chartHost.replaceChildren(weightChart({ points, avg, width }));
+  mount(chartHost, weightChart({ points, avg, width }));
 }
 
 /* Redraw on layout change — rotating the phone, or the container resizing for

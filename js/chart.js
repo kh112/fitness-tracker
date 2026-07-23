@@ -164,6 +164,56 @@ export function weightChart({ points, avg, width, height = 210 }) {
   return svg;
 }
 
+/**
+ * A tiny inline trend line — no axes, no labels, just the shape.
+ * Used one per measurement so a list of them reads as a set of trends.
+ *
+ * @param {{date: string, value: number}[]} points ascending
+ */
+export function sparkline(points, { width = 78, height = 26, color = 'var(--accent)' } = {}) {
+  const svg = s('svg', {
+    viewBox: `0 0 ${width} ${height}`,
+    width, height,
+    'aria-hidden': 'true',
+    style: 'display:block;overflow:visible',
+  });
+  if (points.length === 0) return svg;
+
+  const pad = 3;
+  const times = points.map((p) => fromISO(p.date).getTime());
+  const tMin = times[0];
+  const tSpan = (times[times.length - 1] - tMin) || 1;
+
+  const values = points.map((p) => p.value);
+  const vMin = Math.min(...values);
+  const vSpan = (Math.max(...values) - vMin) || 1;
+
+  const x = (t) => (points.length === 1 ? width / 2 : ((t - tMin) / tSpan) * width);
+  const y = (v) => height - pad - ((v - vMin) / vSpan) * (height - pad * 2);
+
+  if (points.length === 1) {
+    svg.append(s('circle', { cx: width / 2, cy: height / 2, r: 3, fill: color }));
+    return svg;
+  }
+
+  svg.append(s('path', {
+    d: points.map((p, i) =>
+      `${i === 0 ? 'M' : 'L'}${x(times[i]).toFixed(1)},${y(p.value).toFixed(1)}`).join(' '),
+    fill: 'none',
+    stroke: color,
+    'stroke-width': 2,
+    'stroke-linecap': 'round',
+    'stroke-linejoin': 'round',
+  }));
+  svg.append(s('circle', {
+    cx: x(times[times.length - 1]),
+    cy: y(values[values.length - 1]),
+    r: 2.8,
+    fill: color,
+  }));
+  return svg;
+}
+
 function describe(points) {
   if (!points.length) return 'Weight chart, no entries yet';
   const first = points[0];

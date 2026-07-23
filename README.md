@@ -57,7 +57,24 @@ serve.py                dev server (not part of the deployed app)
 
 - [x] **1** — App shell, IndexedDB, weight logging with chart
 - [x] **2** — Manifest, service worker, icons, offline capability
-- [ ] **3** — Exercise log with autocomplete
-- [ ] **4** — Training plan
-- [ ] **5** — Measurements
-- [ ] **6** — Export / import
+- [x] **3** — Exercise log with autocomplete
+- [x] **4** — Training plan
+- [x] **5** — Measurements
+- [x] **6** — Export / import
+
+All six are in. Race day is set to **18 October 2026**; the plan derives its
+week count from your start date, so a block of any length works.
+
+## Developing against the service worker
+
+The service worker serves cached assets first, so an edit may not show up on a
+refresh. In DevTools → Application → Service Workers tick **Update on reload**,
+or paste this into the console once:
+
+```js
+(async () => {
+  for (const r of await navigator.serviceWorker.getRegistrations()) await r.unregister();
+  for (const k of await caches.keys()) await caches.delete(k);
+  location.reload();
+})();
+```

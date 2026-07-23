@@ -21,7 +21,7 @@
  * the worst case is a stale screen that fixes itself on the next launch.
  */
 
-const CACHE = 'tracker-v1';
+const CACHE = 'tracker-v2';
 
 const NAV_TIMEOUT_MS = 2500;
 
@@ -37,7 +37,12 @@ const PRECACHE = [
   './js/ui.js',
   './js/util.js',
   './js/chart.js',
+  './js/backup.js',
   './js/views/weight.js',
+  './js/views/lifts.js',
+  './js/views/plan.js',
+  './js/views/body.js',
+  './js/views/data.js',
   './icons/icon-192.png',
   './icons/icon-512.png',
   './icons/icon-maskable-512.png',

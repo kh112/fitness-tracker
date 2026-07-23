@@ -7,10 +7,19 @@
  */
 
 import * as weight from './views/weight.js';
-import { el } from './util.js';
+import * as lifts from './views/lifts.js';
+import * as plan from './views/plan.js';
+import * as body from './views/body.js';
+import * as data from './views/data.js';
+import { el, mount } from './util.js';
+import { icon } from './ui.js';
 
 const routes = [
-  { path: '#/weight', label: 'Weight', title: 'Weight', view: weight },
+  { path: '#/weight', label: 'Weight', title: 'Weight',   icon: 'weight', view: weight },
+  { path: '#/lifts',  label: 'Lifts',  title: 'Lifts',    icon: 'lifts',  view: lifts },
+  { path: '#/plan',   label: 'Plan',   title: 'Training plan', icon: 'plan', view: plan },
+  { path: '#/body',   label: 'Body',   title: 'Measurements',  icon: 'body', view: body },
+  { path: '#/data',   label: 'Data',   title: 'Your data', icon: 'data',   view: data },
 ];
 
 const DEFAULT_ROUTE = routes[0].path;
@@ -26,36 +35,34 @@ async function renderRoute() {
   document.querySelector('.topbar__title').textContent = route.title;
   document.title = `${route.title} · Training`;
 
+  syncTabs();          // highlight the tab immediately, before any await
+
   try {
     await route.view.render(view);
   } catch (err) {
     console.error(err);
-    view.replaceChildren(
+    mount(view, 
       el('div', { class: 'panel empty' },
-        el('strong', {}, "Couldn't load your data"),
+        el('strong', {}, "Couldn't load this screen"),
         String(err && err.message ? err.message : err),
       ),
     );
   }
 
-  syncTabs();
+  view.scrollTop = 0;
 }
 
-/* The tab bar only exists once there's more than one place to go — a
-   single-item tab bar is furniture pretending to be navigation. */
 function syncTabs() {
   const bar = document.getElementById('tabbar');
-  if (routes.length < 2) {
-    bar.hidden = true;
-    return;
-  }
+  const here = currentRoute().path;
   bar.hidden = false;
-  bar.replaceChildren(
+  mount(bar, 
     routes.map((r) =>
       el('a', {
         href: r.path,
-        'aria-current': r.path === currentRoute().path ? 'page' : null,
-      }, r.label),
+        'aria-current': r.path === here ? 'page' : null,
+        'aria-label': r.title,
+      }, icon(r.icon), r.label),
     ),
   );
 }
@@ -69,8 +76,6 @@ function syncTabs() {
 async function registerServiceWorker() {
   if (!('serviceWorker' in navigator)) return;
   try {
-    // Resolved against this module's URL so it points at the repo root
-    // regardless of the subpath the site is served from.
     await navigator.serviceWorker.register(new URL('../sw.js', import.meta.url));
   } catch (err) {
     console.warn('Service worker registration failed:', err);
@@ -78,7 +83,7 @@ async function registerServiceWorker() {
 }
 
 /* iOS can evict storage for web apps that go unused. Persistent storage makes
-   that less likely; the export button (later milestone) is the real backstop. */
+   that less likely; the export button on the Data tab is the real backstop. */
 async function requestPersistence() {
   if (!navigator.storage?.persist) return;
   try {

@@ -59,9 +59,43 @@ export function fmtDateRelative(iso) {
   return fmtDate(iso);
 }
 
+/* Weeks start on Monday throughout this app. */
+export const DAY_NAMES = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+
+/** 0 = Monday … 6 = Sunday. */
+export function dayOfWeek(iso) {
+  return (fromISO(iso).getDay() + 6) % 7;
+}
+
+/** The Monday of the week containing `iso`. */
+export function startOfWeek(iso) {
+  return addDays(iso, -dayOfWeek(iso));
+}
+
+/** '12–18 Aug' / '29 Sep – 5 Oct' — a week's date span, compactly. */
+export function fmtWeekSpan(mondayISO) {
+  const end = addDays(mondayISO, 6);
+  const a = fromISO(mondayISO);
+  const b = fromISO(end);
+  return a.getMonth() === b.getMonth()
+    ? `${a.getDate()}–${b.getDate()} ${MONTHS[b.getMonth()]}`
+    : `${a.getDate()} ${MONTHS[a.getMonth()]} – ${b.getDate()} ${MONTHS[b.getMonth()]}`;
+}
+
 /** One decimal, no trailing '.0' stripping — 72 kg should read '72.0'. */
 export function fmtKg(kg) {
   return kg.toFixed(1);
+}
+
+/** Distances drop a pointless '.0': 10 km, not 10.0 km; but 10.5 km stays. */
+export function fmtKm(km) {
+  const n = Number(km) || 0;
+  return Number.isInteger(n) ? String(n) : n.toFixed(1);
+}
+
+/** Round to one decimal without floating-point crumbs. */
+export function round1(n) {
+  return Math.round(Number(n) * 10) / 10;
 }
 
 /** Signed, one decimal: '+0.4', '-1.2', '0.0'. */
@@ -105,6 +139,16 @@ export function debounce(fn, ms) {
   };
 }
 
+/**
+ * Flatten a children list: nested arrays in, renderable nodes out, with
+ * null/undefined/false dropped so `cond ? el(...) : null` works inline.
+ */
+function flatten(children) {
+  return children
+    .flat(Infinity)
+    .filter((c) => c !== null && c !== undefined && c !== false);
+}
+
 /** Build an element: el('div', {class: 'x'}, 'text', childNode). */
 export function el(tag, attrs = {}, ...children) {
   const node = document.createElement(tag);
@@ -117,9 +161,18 @@ export function el(tag, attrs = {}, ...children) {
     } else if (v === true) node.setAttribute(k, '');
     else node.setAttribute(k, v);
   }
-  for (const c of children.flat()) {
-    if (c === null || c === undefined || c === false) continue;
-    node.append(c);
-  }
+  node.append(...flatten(children));
+  return node;
+}
+
+/**
+ * Replace a node's contents, accepting the same loose children as `el()`.
+ *
+ * Native replaceChildren() takes Nodes and strings only: hand it an array and
+ * it stringifies it, hand it null and you get the text "null". Every re-render
+ * in this app goes through here instead.
+ */
+export function mount(node, ...children) {
+  node.replaceChildren(...flatten(children));
   return node;
 }
