@@ -12,7 +12,7 @@
 
 import * as db from '../db.js';
 import { sparkline } from '../chart.js';
-import { toast, confirmDialog, sheet, icon } from '../ui.js';
+import { toast, confirmDialog, sheet, sheetHead, icon } from '../ui.js';
 import {
   el, mount, todayISO, fmtDate, fmtDateRelative, fmtDelta, isValidISO, round1,
 } from '../util.js';
@@ -30,15 +30,16 @@ export async function render(view) {
   const byDate = groupByDate(rows);
   const dates = [...byDate.keys()].sort().reverse();
 
-  mount(view, 
+  mount(view,
+    el('h1', { class: 'large-title', text: 'Body' }),
     el('div', { class: 'stack' },
       el('section', { class: 'section' },
         el('div', { class: 'section__head' },
           el('h2', { class: 'section__title', text: 'Trends' }),
           el('button', {
-            class: 'btn btn--sm', type: 'button',
+            class: 'section__action', type: 'button',
             onclick: () => openFieldEditor(),
-          }, 'Edit fields'),
+            }, 'Edit fields'),
         ),
         active.length === 0
           ? el('div', { class: 'panel empty' },
@@ -198,14 +199,7 @@ function openSheet(date) {
   });
 
   const form = el('form', { class: 'sheet__inner', novalidate: true },
-    el('div', { class: 'sheet__head' },
-      el('h2', { class: 'sheet__title',
-        text: isEdit ? `Edit ${fmtDate(date)}` : 'Log measurements' }),
-      el('button', {
-        class: 'icon-btn', type: 'button', 'aria-label': 'Close',
-        onclick: () => dismiss(),
-      }, icon('close')),
-    ),
+    sheetHead(isEdit ? `Edit ${fmtDate(date)}` : 'Log measurements', () => dismiss()),
     el('div', { class: 'muted-note' }, 'Leave anything you did not measure blank.'),
     fieldRows,
     el('div', { class: 'field' },
@@ -291,13 +285,7 @@ function openFieldEditor() {
   }
 
   const form = el('form', { class: 'sheet__inner', novalidate: true },
-    el('div', { class: 'sheet__head' },
-      el('h2', { class: 'sheet__title', text: 'Measurements tracked' }),
-      el('button', {
-        class: 'icon-btn', type: 'button', 'aria-label': 'Close',
-        onclick: () => finish(),
-      }, icon('close')),
-    ),
+    sheetHead('Measurements tracked', () => finish()),
     el('div', { class: 'muted-note' },
       'Switching one off hides it from logging and from the trends list. '
       + 'Its history is kept, so switching it back on brings everything with it.'),

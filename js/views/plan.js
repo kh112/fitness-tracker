@@ -11,7 +11,7 @@
  */
 
 import * as db from '../db.js';
-import { toast, confirmDialog, sheet, icon } from '../ui.js';
+import { toast, confirmDialog, sheet, sheetHead, icon } from '../ui.js';
 import {
   el, mount, todayISO, addDays, daysBetween, startOfWeek, fmtDate,
   fmtWeekSpan, fmtKm, isValidISO, round1, DAY_NAMES,
@@ -39,7 +39,9 @@ export async function render(view) {
   plan = await db.getPlan();
 
   if (!plan) {
-    mount(view, setupScreen());
+    mount(view,
+      el('h1', { class: 'large-title', text: 'Training' }),
+      setupScreen());
     return;
   }
 
@@ -52,16 +54,17 @@ export async function render(view) {
   const current = weeks.find((w) => w.isCurrent);
   if (current && expanded.size === 0) expanded.add(current.index);
 
-  mount(view, 
+  mount(view,
+    el('h1', { class: 'large-title', text: 'Training' }),
     el('div', { class: 'stack' },
       countdownPanel(weeks),
       el('section', { class: 'section' },
         el('div', { class: 'section__head' },
           el('h2', { class: 'section__title', text: 'Weeks' }),
           el('button', {
-            class: 'btn btn--sm', type: 'button',
+            class: 'section__action', type: 'button',
             onclick: () => openPlanSettings(),
-          }, 'Plan settings'),
+            }, 'Plan settings'),
         ),
         el('div', {}, weeks.map(weekCard)),
       ),
@@ -365,14 +368,7 @@ function openPlannedEditor(week, day) {
   );
 
   const form = el('form', { class: 'sheet__inner', novalidate: true },
-    el('div', { class: 'sheet__head' },
-      el('h2', { class: 'sheet__title',
-        text: `${DAY_NAMES[day.dayOfWeek]} ${fmtDate(day.date)}` }),
-      el('button', {
-        class: 'icon-btn', type: 'button', 'aria-label': 'Close',
-        onclick: () => dismiss(),
-      }, icon('close')),
-    ),
+    sheetHead(`${DAY_NAMES[day.dayOfWeek]} ${fmtDate(day.date)}`, () => dismiss()),
     el('div', { class: 'field' },
       el('span', { class: 'field__label', text: 'Session type' }), picker),
     kmField,
@@ -455,13 +451,7 @@ function openCompletion(plannedSession, existing, date) {
     : 'Log a run';
 
   const form = el('form', { class: 'sheet__inner', novalidate: true },
-    el('div', { class: 'sheet__head' },
-      el('h2', { class: 'sheet__title', text: title }),
-      el('button', {
-        class: 'icon-btn', type: 'button', 'aria-label': 'Close',
-        onclick: () => dismiss(),
-      }, icon('close')),
-    ),
+    sheetHead(title, () => dismiss()),
     plannedSession
       ? el('div', { class: 'recall' },
           el('div', { class: 'recall__label', text: 'Planned' }),
@@ -531,13 +521,7 @@ function openPlanSettings() {
   const error = el('div', { class: 'field__error', role: 'alert' });
 
   const form = el('form', { class: 'sheet__inner', novalidate: true },
-    el('div', { class: 'sheet__head' },
-      el('h2', { class: 'sheet__title', text: 'Plan settings' }),
-      el('button', {
-        class: 'icon-btn', type: 'button', 'aria-label': 'Close',
-        onclick: () => dismiss(),
-      }, icon('close')),
-    ),
+    sheetHead('Plan settings', () => dismiss()),
     el('div', { class: 'field' },
       el('label', { class: 'field__label', for: 's-name', text: 'Name' }), name),
     el('div', { class: 'field' },

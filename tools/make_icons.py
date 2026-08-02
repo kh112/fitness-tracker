@@ -19,8 +19,8 @@ import os
 import struct
 import zlib
 
-BG = (0x0A, 0x0B, 0x0D)      # --bg
-FG = (0xFF, 0x5F, 0x1F)      # --accent
+BG = (0x00, 0x00, 0x00)      # --bg
+FG = (0x0A, 0x84, 0xFF)      # --accent, iOS dark-mode system blue
 
 # Polyline in unit coordinates, y down. Kept inside the central 80% circle so
 # the same art survives Android's maskable crop.

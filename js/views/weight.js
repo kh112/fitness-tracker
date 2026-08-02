@@ -7,7 +7,7 @@
 
 import * as db from '../db.js';
 import { weightChart } from '../chart.js';
-import { toast, confirmDialog, sheet, icon } from '../ui.js';
+import { toast, confirmDialog, sheet, sheetHead, icon } from '../ui.js';
 import {
   el, mount, todayISO, addDays, daysBetween, fmtDate, fmtDateRelative,
   fmtKg, fmtDelta, isValidISO, rollingAverage,
@@ -26,7 +26,8 @@ let chartHost = null;   // element the chart is drawn into
 export async function render(view) {
   rows = await db.listWeights();
 
-  mount(view, 
+  mount(view,
+    el('h1', { class: 'large-title', text: 'Weight' }),
     el('div', { class: 'stack' },
       heroSection(),
       chartSection(),
@@ -122,7 +123,7 @@ function chartSection() {
   return el('section', { class: 'section' },
     el('div', { class: 'section__head' },
       el('h2', { class: 'section__title', text: 'Trend' }),
-      el('div', { class: 'range', role: 'group', 'aria-label': 'Chart range' },
+      el('div', { class: 'segmented', role: 'group', 'aria-label': 'Chart range' },
         RANGES.map((r) =>
           el('button', {
             type: 'button',
@@ -144,7 +145,7 @@ function chartSection() {
 
 function setRange(key) {
   rangeKey = key;
-  for (const btn of document.querySelectorAll('.range button')) {
+  for (const btn of document.querySelectorAll('.segmented button')) {
     btn.setAttribute('aria-pressed',
       String(RANGES.find((r) => r.label === btn.textContent).key === key));
   }
@@ -289,13 +290,7 @@ function openSheet(existing) {
   // is easy to miss on a phone. We validate below and write the reason into a
   // line of text that stays put.
   const form = el('form', { class: 'sheet__inner', novalidate: true },
-    el('div', { class: 'sheet__head' },
-      el('h2', { class: 'sheet__title', text: isEdit ? 'Edit weigh-in' : 'Log weight' }),
-      el('button', {
-        class: 'icon-btn', type: 'button', 'aria-label': 'Close',
-        onclick: () => dismiss(),
-      }, icon('close')),
-    ),
+    sheetHead(isEdit ? 'Edit weigh-in' : 'Log weight', () => dismiss()),
     el('div', { class: 'field' },
       el('label', { class: 'field__label', for: 'w-kg', text: 'Weight (kg)' }),
       kgInput,

@@ -6,7 +6,7 @@
  */
 
 import * as backup from '../backup.js';
-import { toast, confirmDialog, sheet, icon } from '../ui.js';
+import { toast, confirmDialog, sheet, sheetHead, icon } from '../ui.js';
 import { el, mount, fmtDateRelative, todayISO } from '../util.js';
 
 export async function render(view) {
@@ -15,7 +15,8 @@ export async function render(view) {
     countAll(),
   ]);
 
-  mount(view, 
+  mount(view,
+    el('h1', { class: 'large-title', text: 'Data' }),
     el('div', { class: 'stack' },
       reminderBanner(days),
 

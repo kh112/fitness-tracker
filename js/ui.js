@@ -23,6 +23,10 @@ export function toast(message, ms = 2600) {
  * @returns {{dialog: HTMLDialogElement, dismiss: () => void}}
  */
 export function sheet(inner, onDismiss) {
+  // The grab handle iOS sheets have. Purely a visual affordance — the sheet
+  // is dismissed by Cancel or Escape, not by dragging.
+  inner.prepend(el('div', { class: 'sheet__grabber', 'aria-hidden': 'true' }));
+
   const dialog = el('dialog', { class: 'sheet' }, inner);
   let gone = false;
 
@@ -54,8 +58,12 @@ export function confirmDialog({ title, body, confirmLabel = 'Confirm', danger = 
     let answer = false;
 
     const inner = el('div', { class: 'sheet__inner' },
-      el('div', { class: 'sheet__head' }, el('h2', { class: 'sheet__title', text: title })),
-      body ? el('p', { class: 'hero__meta', text: body, style: 'margin:0' }) : null,
+      el('div', { class: 'sheet__head' },
+        el('span', {}),
+        el('h2', { class: 'sheet__title', text: title }),
+        el('span', {}),
+      ),
+      body ? el('p', { class: 'muted-note', text: body, style: 'margin:0' }) : null,
       el('div', { class: 'sheet__actions' },
         el('button', {
           class: `btn btn--block ${danger ? 'btn--danger' : 'btn--primary'}`,
@@ -72,6 +80,21 @@ export function confirmDialog({ title, body, confirmLabel = 'Confirm', danger = 
 
     const { dismiss } = sheet(inner, () => resolve(answer));
   });
+}
+
+/**
+ * The modal nav bar iOS sheets use: Cancel on the left, title centred.
+ * There's deliberately no Done on the right — the primary action stays as a
+ * full-width button at the bottom of the sheet, within thumb reach.
+ */
+export function sheetHead(title, onCancel) {
+  return el('div', { class: 'sheet__head' },
+    el('button', {
+      class: 'sheet__cancel', type: 'button', onclick: onCancel,
+    }, 'Cancel'),
+    el('h2', { class: 'sheet__title', text: title }),
+    el('span', {}),
+  );
 }
 
 export function icon(name) {

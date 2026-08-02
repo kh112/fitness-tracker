@@ -13,7 +13,7 @@
 
 import * as db from '../db.js';
 import { dailyBars } from '../chart.js';
-import { toast, confirmDialog, sheet, icon } from '../ui.js';
+import { toast, confirmDialog, sheet, sheetHead, icon } from '../ui.js';
 import {
   el, mount, todayISO, addDays, fmtDate, fmtDateRelative, isValidISO,
 } from '../util.js';
@@ -38,6 +38,7 @@ export async function render(view) {
   const total = forDay.reduce((sum, e) => sum + e.kcal, 0);
 
   mount(view,
+    el('h1', { class: 'large-title', text: 'Nutrition' }),
     el('div', { class: 'stack' },
       heroSection(total, forDay),
       trendSection(),
@@ -156,7 +157,7 @@ function trendSection() {
       el('h2', { class: 'section__title', text: `Last ${HISTORY_DAYS} days` }),
       foods.length
         ? el('button', {
-            class: 'btn btn--sm', type: 'button', onclick: () => openFoodManager(),
+          class: 'section__action', type: 'button', onclick: () => openFoodManager(),
           }, 'Foods')
         : null,
     ),
@@ -290,13 +291,7 @@ function openSheet(existing) {
   nameInput.addEventListener('input', renderSuggestions);
 
   const form = el('form', { class: 'sheet__inner', novalidate: true },
-    el('div', { class: 'sheet__head' },
-      el('h2', { class: 'sheet__title', text: isEdit ? 'Edit item' : 'Log food' }),
-      el('button', {
-        class: 'icon-btn', type: 'button', 'aria-label': 'Close',
-        onclick: () => dismiss(),
-      }, icon('close')),
-    ),
+    sheetHead(isEdit ? 'Edit item' : 'Log food', () => dismiss()),
     el('div', { class: 'field' },
       el('label', { class: 'field__label', for: 'f-name', text: 'Food' }), nameInput),
     suggestions,
@@ -388,13 +383,7 @@ function openTargetSheet() {
   const error = el('div', { class: 'field__error', role: 'alert' });
 
   const form = el('form', { class: 'sheet__inner', novalidate: true },
-    el('div', { class: 'sheet__head' },
-      el('h2', { class: 'sheet__title', text: 'Daily target' }),
-      el('button', {
-        class: 'icon-btn', type: 'button', 'aria-label': 'Close',
-        onclick: () => dismiss(),
-      }, icon('close')),
-    ),
+    sheetHead('Daily target', () => dismiss()),
     el('div', { class: 'muted-note' },
       'A flat number for every day. Marathon blocks push energy needs up a lot on '
       + 'long-run days, so treat this as a rough reference rather than a rule — '
@@ -478,13 +467,7 @@ function openFoodManager() {
   }
 
   const inner = el('div', { class: 'sheet__inner' },
-    el('div', { class: 'sheet__head' },
-      el('h2', { class: 'sheet__title', text: 'Remembered foods' }),
-      el('button', {
-        class: 'icon-btn', type: 'button', 'aria-label': 'Close',
-        onclick: () => finish(),
-      }, icon('close')),
-    ),
+    sheetHead('Remembered foods', () => finish()),
     el('div', { class: 'panel', style: 'padding:0 14px' }, list),
     el('div', { class: 'sheet__actions' },
       el('button', {

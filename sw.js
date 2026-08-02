@@ -21,7 +21,7 @@
  * the worst case is a stale screen that fixes itself on the next launch.
  */
 
-const CACHE = 'tracker-v3';
+const CACHE = 'tracker-v4';
 
 const NAV_TIMEOUT_MS = 2500;
 

@@ -12,7 +12,7 @@
  */
 
 import * as db from '../db.js';
-import { toast, confirmDialog, sheet, icon } from '../ui.js';
+import { toast, confirmDialog, sheet, sheetHead, icon } from '../ui.js';
 import {
   el, mount, todayISO, fmtDate, fmtDateRelative, fmtKg, isValidISO, round1,
 } from '../util.js';
@@ -30,7 +30,8 @@ export async function render(view) {
   const todayGroups = days.get(today) ?? [];
   const past = [...days.entries()].filter(([date]) => date !== today).reverse();
 
-  mount(view, 
+  mount(view,
+    el('h1', { class: 'large-title', text: 'Lifts' }),
     el('div', { class: 'stack' },
       todaySection(todayGroups, today),
       past.length
@@ -310,13 +311,7 @@ function openSheet(existing) {
   /* ---- assemble ---- */
 
   const form = el('form', { class: 'sheet__inner', novalidate: true },
-    el('div', { class: 'sheet__head' },
-      el('h2', { class: 'sheet__title', text: isEdit ? 'Edit exercise' : 'Log exercise' }),
-      el('button', {
-        class: 'icon-btn', type: 'button', 'aria-label': 'Close',
-        onclick: () => dismiss(),
-      }, icon('close')),
-    ),
+    sheetHead(isEdit ? 'Edit exercise' : 'Log exercise', () => dismiss()),
     el('div', { class: 'field' },
       el('label', { class: 'field__label', for: 'ex-name', text: 'Exercise' }),
       nameInput,

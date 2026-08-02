@@ -15,13 +15,15 @@ import * as data from './views/data.js';
 import { el, mount } from './util.js';
 import { icon } from './ui.js';
 
+/* `tint` is the Health-style category colour for the screen — used on card
+   headers, not on controls. The accent stays uniform across the app. */
 const routes = [
-  { path: '#/weight', label: 'Weight', title: 'Weight',   icon: 'weight', view: weight },
-  { path: '#/lifts',  label: 'Lifts',  title: 'Lifts',    icon: 'lifts',  view: lifts },
-  { path: '#/plan',   label: 'Plan',   title: 'Training plan', icon: 'plan', view: plan },
-  { path: '#/food',   label: 'Food',   title: 'Calories', icon: 'food',   view: food },
-  { path: '#/body',   label: 'Body',   title: 'Measurements',  icon: 'body', view: body },
-  { path: '#/data',   label: 'Data',   title: 'Your data', icon: 'data',   view: data },
+  { path: '#/weight', label: 'Weight', title: 'Weight',   icon: 'weight', tint: 'weight', view: weight },
+  { path: '#/lifts',  label: 'Lifts',  title: 'Lifts',    icon: 'lifts',  tint: 'lifts',  view: lifts },
+  { path: '#/plan',   label: 'Plan',   title: 'Training', icon: 'plan',   tint: 'plan',   view: plan },
+  { path: '#/food',   label: 'Food',   title: 'Nutrition', icon: 'food',  tint: 'food',   view: food },
+  { path: '#/body',   label: 'Body',   title: 'Body',     icon: 'body',   tint: 'body',   view: body },
+  { path: '#/data',   label: 'Data',   title: 'Data',     icon: 'data',   tint: 'data',   view: data },
 ];
 
 const DEFAULT_ROUTE = routes[0].path;
@@ -36,6 +38,8 @@ async function renderRoute() {
 
   document.querySelector('.topbar__title').textContent = route.title;
   document.title = `${route.title} · Training`;
+  // Scopes the screen's category colour; card headers read it via var(--tint).
+  view.style.setProperty('--tint', `var(--c-${route.tint})`);
 
   syncTabs();          // highlight the tab immediately, before any await
 
@@ -43,7 +47,8 @@ async function renderRoute() {
     await route.view.render(view);
   } catch (err) {
     console.error(err);
-    mount(view, 
+    mount(view,
+      el('h1', { class: 'large-title', text: route.title }),
       el('div', { class: 'panel empty' },
         el('strong', {}, "Couldn't load this screen"),
         String(err && err.message ? err.message : err),
@@ -51,8 +56,22 @@ async function renderRoute() {
     );
   }
 
-  view.scrollTop = 0;
+  window.scrollTo(0, 0);
+  syncNav();
 }
+
+/* Health's collapsing title: the big heading lives in the content, and the
+   nav bar only grows a background and its own title once you've scrolled
+   past it. Threshold is the large title's own height, so the swap happens
+   exactly as it leaves the screen. */
+function syncNav() {
+  const bar = document.querySelector('.topbar');
+  const title = document.querySelector('.large-title');
+  const threshold = title ? title.offsetTop + title.offsetHeight - 44 : 8;
+  bar.classList.toggle('topbar--scrolled', window.scrollY > Math.max(threshold, 8));
+}
+
+window.addEventListener('scroll', syncNav, { passive: true });
 
 function syncTabs() {
   const bar = document.getElementById('tabbar');
