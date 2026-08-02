@@ -109,14 +109,18 @@ wasn't on the plan, and that shouldn't be unrecordable.
 
 ## 5. Design direction
 
-> **Changed 2 Aug 2026:** the visual language now references **Apple Health
-> (dark)** — collapsing large titles, grouped cards on black, bold sentence-case
-> section headers with tinted actions, inset hairline separators, segmented
-> controls, iOS sheets with grabber + Cancel. Accent is iOS system blue; the
-> icon was regenerated to match. Corner radii are deliberately about half
-> Apple's. Two contrast deviations from Apple are documented at the top of
-> `css/app.css` — Apple's tertiary label and white-on-system-blue both fail AA,
-> and this app has a gym-lighting requirement that outranks matching iOS exactly.
+> **Changed 2 Aug 2026:** the visual language references **Apple Health
+> (light)** — white cards on a grey canvas, collapsing large titles, bold
+> sentence-case section headers with tinted actions, inset hairline separators,
+> segmented controls, iOS sheets with grabber + Cancel. Corner radii are
+> deliberately about half Apple's.
+>
+> Theme is **light only** — the earlier dark-only choice was reversed. Accent is
+> orange, in two shades: bright `#FF9500` for large fills that carry dark ink,
+> and `#C2410C` for anything that is itself text or a thin line. The reasoning
+> and the measured ratios are at the top of `css/app.css`; several of Apple's
+> own light-mode values fail WCAG AA and this app's gym-lighting requirement
+> outranks matching iOS exactly.
 
 Read the frontend-design guidance and make real choices, but these constraints come from
 how it actually gets used:

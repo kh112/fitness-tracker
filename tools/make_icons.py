@@ -19,8 +19,9 @@ import os
 import struct
 import zlib
 
-BG = (0x00, 0x00, 0x00)      # --bg
-FG = (0x0A, 0x84, 0xFF)      # --accent, iOS dark-mode system blue
+BG = (0xFF, 0xFF, 0xFF)      # white, matching Health's light icon
+# Deeper than --accent-bright: #FF9500 on white washes out at 32px.
+FG = (0xE8, 0x59, 0x0C)
 
 # Polyline in unit coordinates, y down. Kept inside the central 80% circle so
 # the same art survives Android's maskable crop.

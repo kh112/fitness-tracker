@@ -1,68 +1,91 @@
 /* ------------------------------------------------------------------
    Fitness & Marathon Tracker
 
-   Visual reference: Apple Health (dark). What that means concretely:
+   Visual reference: Apple Health (light). What that means concretely:
 
      - Collapsing large title. The screen name starts big inside the
        content and shrinks into the nav bar as you scroll.
-     - Grouped cards on a black background, each led by a small tinted
-       category label, with the number as the loudest thing in the card.
+     - White cards on a grey canvas, each led by a small tinted category
+       label, with the number as the loudest thing in the card.
      - Section headers are bold sentence case with a tinted action on the
        right, not grey uppercase micro-labels.
      - Hairline separators inset to line up with the row's text.
 
-   Two deliberate departures, both from the brief's gym-lighting rule:
+   Light theme, orange accent. Corner radii are roughly half Apple's.
 
-     1. Corner radii are roughly half Apple's. Asked for, and it suits a
-        screen that is mostly numbers and grids.
-     2. Apple's secondaryLabel/tertiaryLabel alphas (0.60/0.30) are raised
-        to 0.72/0.55. Apple's tertiary lands at 2.4:1 on a card, which is
-        unreadable in a badly lit gym. These sit near 5.7:1.
+   About the orange. Apple's systemOrange #FF9500 measures 2.2:1 on white —
+   it fails even the 3:1 floor for graphics, let alone text. Apple gets away
+   with it because they use it on dark, or as huge ring graphics. So there
+   are two:
+
+     --accent-bright #FF9500  large solid fills only, and always with dark
+                              ink on top (9.5:1). The FAB, progress bars,
+                              chart bars, the sheet's primary button.
+     --accent        #C2410C  anything that is itself text, a thin line, or
+                              a small icon. 5.2:1 on white.
+
+   They read as the same orange; the darker one does the work wherever
+   legibility actually matters.
+
+   Label alphas are raised well past Apple's for the same reason, and the
+   numbers are worth writing down because alpha over white behaves nothing
+   like alpha over black — Apple's dark-mode values do not translate:
+
+     secondaryLabel  Apple 0.60 -> 2.9:1    here 0.85 -> 6.5:1
+     tertiaryLabel   Apple 0.30 -> 1.5:1    here 0.75 -> 4.7:1
+
+   Both of Apple's fail AA outright on white. They get away with it on
+   iOS; this app is read in a gym.
    ------------------------------------------------------------------ */
 
 :root {
-  /* --- surfaces: Health's dark grouped-background stack --- */
-  --bg:         #000000;
-  --card:       #1c1c1e;
-  --card-2:     #2c2c2e;
-  --fill:       rgba(118, 118, 128, 0.24);
-  --fill-2:     rgba(118, 118, 128, 0.16);
-  --separator:  rgba(84, 84, 88, 0.65);
+  /* --- surfaces: Health's light grouped-background stack --- */
+  --bg:         #f2f2f7;
+  --card:       #ffffff;
+  --card-2:     #f2f2f7;
+  --fill:       rgba(118, 118, 128, 0.12);
+  --fill-2:     rgba(118, 118, 128, 0.08);
+  --separator:  rgba(60, 60, 67, 0.29);
 
   /* --- labels --- */
-  --label:      #ffffff;
-  --label-2:    rgba(235, 235, 245, 0.72);
-  --label-3:    rgba(235, 235, 245, 0.55);
+  --label:      #000000;
+  --label-2:    rgba(60, 60, 67, 0.85);
+  --label-3:    rgba(60, 60, 67, 0.75);
 
-  /* --- accent: iOS dark-mode system blue ---
-     Two tokens on purpose. Apple's #0A84FF is right for text and icons on a
-     dark background (5.8:1), but white text ON it is only 3.65:1 — which is
-     what iOS actually ships and what this app can't afford in bad lighting.
-     Filled buttons use a deeper blue that carries white at 4.9:1. */
-  --accent:      #0a84ff;
-  --accent-fill: #0a6ce6;
-  --accent-ink:  #ffffff;
-  --accent-dim:  rgba(10, 132, 255, 0.18);
+  /* --- accent --- */
+  --accent:        #c2410c;
+  --accent-bright: #ff9500;
+  --accent-ink:    #3d1c00;
+  --accent-dim:    rgba(255, 149, 0, 0.18);
 
-  /* --- category tints, Health-style: one per screen --- */
-  --c-weight:   #0a84ff;
-  --c-lifts:    #bf5af2;
-  --c-plan:     #30d158;
-  --c-food:     #ffd60a;
-  --c-body:     #64d2ff;
-  --c-data:     #5e5ce6;
+  /* --- chart chrome: referenced by name from chart.js --- */
+  --chart-grid: #dcdce2;
+  --chart-dot:  rgba(60, 60, 67, 0.45);
+  --chart-line: #e8590c;
+  /* The stub marking a day with nothing logged. Must actually be visible —
+     that stub is the whole point of distinguishing 'zero' from 'no data'. */
+  --chart-empty: #8e8e93;
 
-  --good:       #30d158;
-  --bad:        #ff453a;
-  --warn:       #ff9f0a;
+  /* --- category tints, Health-style: one per screen.
+         All are text-weight, so all clear 4.5:1 on white. --- */
+  --c-weight:   #c2410c;
+  --c-lifts:    #7c3aed;
+  --c-plan:     #1b7f3b;
+  --c-food:     #a16207;
+  --c-body:     #0e7490;
+  --c-data:     #4338ca;
 
-  /* session types */
-  --t-easy:     #30d158;
-  --t-tempo:    #ff9f0a;
-  --t-interval: #ff453a;
-  --t-long:     #0a84ff;
-  --t-cross:    #64d2ff;
-  --t-rest:     #8e8e93;
+  --good:       #1b7f3b;
+  --bad:        #c0272d;
+  --warn:       #a16207;
+
+  /* session types — dot swatches and picker fills */
+  --t-easy:     #1b7f3b;
+  --t-tempo:    #a16207;
+  --t-interval: #c0272d;
+  --t-long:     #c2410c;
+  --t-cross:    #0e7490;
+  --t-rest:     #6d6d72;
 
   /* --- radii: about half Apple's, as asked --- */
   --r-card:     8px;
@@ -132,7 +155,7 @@ button, input, select, textarea { font: inherit; color: inherit; }
 }
 
 .topbar--scrolled {
-  background: rgba(20, 20, 22, 0.8);
+  background: rgba(249, 249, 251, 0.82);
   backdrop-filter: saturate(180%) blur(20px);
   -webkit-backdrop-filter: saturate(180%) blur(20px);
   border-bottom-color: var(--separator);
@@ -335,9 +358,9 @@ button, input, select, textarea { font: inherit; color: inherit; }
   cursor: pointer;
 }
 .segmented button[aria-pressed="true"] {
-  background: #636366;
+  background: #ffffff;
   font-weight: 600;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.14);
 }
 
 /* ---------------------------------------------------- list rows */
@@ -449,13 +472,13 @@ button, input, select, textarea { font: inherit; color: inherit; }
   border: 0;
   border-radius: 10px;
 
-  background: var(--accent-fill);
+  background: var(--accent-bright);
   color: var(--accent-ink);
   font-size: 17px;
   font-weight: 600;
   letter-spacing: -0.02em;
 
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.6);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.22);
   cursor: pointer;
 }
 .fab:active { opacity: 0.85; }
@@ -471,10 +494,10 @@ dialog.sheet {
   border: 0;
   background: transparent;
 }
-dialog.sheet::backdrop { background: rgba(0, 0, 0, 0.5); }
+dialog.sheet::backdrop { background: rgba(0, 0, 0, 0.35); }
 
 .sheet__inner {
-  background: #1c1c1e;
+  background: var(--card);
   border-radius: var(--r-sheet) var(--r-sheet) 0 0;
   padding: 8px var(--pad) calc(18px + var(--safe-b));
   display: flex;
@@ -489,7 +512,7 @@ dialog.sheet::backdrop { background: rgba(0, 0, 0, 0.5); }
   width: 36px;
   height: 5px;
   border-radius: 2px;
-  background: rgba(235, 235, 245, 0.3);
+  background: rgba(60, 60, 67, 0.3);
   margin: 0 auto;
   flex: none;
 }
@@ -588,7 +611,7 @@ dialog.sheet::backdrop { background: rgba(0, 0, 0, 0.5); }
 }
 .btn:active { opacity: 0.6; }
 
-.btn--primary { background: var(--accent-fill); color: var(--accent-ink); }
+.btn--primary { background: var(--accent-bright); color: var(--accent-ink); }
 .btn--danger  { color: var(--bad); font-weight: 400; }
 .btn--block   { width: 100%; }
 .btn--ghost   { background: transparent; color: var(--accent); font-weight: 400; }
@@ -614,10 +637,10 @@ dialog.sheet::backdrop { background: rgba(0, 0, 0, 0.5); }
   max-width: min(92vw, 420px);
   padding: 11px 18px;
   border-radius: var(--r-control);
-  background: rgba(58, 58, 60, 0.92);
+  background: rgba(44, 44, 46, 0.94);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.2);
 
   font-size: 15px;
   font-weight: 500;
@@ -638,7 +661,7 @@ dialog.sheet::backdrop { background: rgba(0, 0, 0, 0.5); }
   z-index: 20;
   display: flex;
   border-top: 1px solid var(--separator);
-  background: rgba(20, 20, 22, 0.82);
+  background: rgba(249, 249, 251, 0.86);
   backdrop-filter: saturate(180%) blur(20px);
   -webkit-backdrop-filter: saturate(180%) blur(20px);
   padding-bottom: var(--safe-b);
@@ -707,7 +730,7 @@ dialog.sheet::backdrop { background: rgba(0, 0, 0, 0.5); }
 }
 .chip:active { opacity: 0.6; }
 .chip[aria-pressed="true"], .chip--on {
-  background: var(--accent-fill);
+  background: var(--accent-bright);
   color: var(--accent-ink);
 }
 
@@ -934,7 +957,7 @@ dialog.sheet::backdrop { background: rgba(0, 0, 0, 0.5); }
 .tick--done {
   background: var(--good);
   border-color: var(--good);
-  color: #000;
+  color: #ffffff;
 }
 
 /* ----------------------------------------------------- trend rows */
@@ -1027,7 +1050,7 @@ dialog.sheet::backdrop { background: rgba(0, 0, 0, 0.5); }
   width: 27px; height: 27px;
   border-radius: 50%;
   background: #fff;
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.35);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.18);
   transition: transform 200ms ease;
 }
 .switch[aria-checked="true"] { background: var(--good); }

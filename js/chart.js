@@ -90,12 +90,12 @@ export function weightChart({ points, avg, width, height = 210 }) {
     const ty = y(tick);
     svg.append(s('line', {
       x1: PAD_L, x2: w - PAD_R, y1: ty, y2: ty,
-      stroke: 'var(--line-soft)', 'stroke-width': 1,
+      stroke: 'var(--chart-grid)', 'stroke-width': 1,
     }));
     const label = s('text', {
       x: PAD_L - 8, y: ty + 4,
       'text-anchor': 'end',
-      fill: 'var(--ink-faint)',
+      fill: 'var(--label-3)',
       'font-size': 11,
       'font-weight': 600,
     });
@@ -118,7 +118,7 @@ export function weightChart({ points, avg, width, height = 210 }) {
     const label = s('text', {
       x: px, y: height - 7,
       'text-anchor': points.length === 1 ? 'middle' : anchor,
-      fill: 'var(--ink-faint)',
+      fill: 'var(--label-3)',
       'font-size': 11,
       'font-weight': 600,
     });
@@ -133,7 +133,7 @@ export function weightChart({ points, avg, width, height = 210 }) {
       cx: x(fromISO(p.date).getTime()),
       cy: y(p.kg),
       r: 2.6,
-      fill: 'var(--ink-faint)',
+      fill: 'var(--label-3)',
     }));
   }
 
@@ -146,7 +146,7 @@ export function weightChart({ points, avg, width, height = 210 }) {
     svg.append(s('path', {
       d,
       fill: 'none',
-      stroke: 'var(--accent)',
+      stroke: 'var(--chart-line)',
       'stroke-width': 2.75,
       'stroke-linecap': 'round',
       'stroke-linejoin': 'round',
@@ -158,7 +158,7 @@ export function weightChart({ points, avg, width, height = 210 }) {
   const last = avg[avg.length - 1] ?? { date: points[points.length - 1].date, avg: points[points.length - 1].kg };
   const hx = x(fromISO(last.date).getTime());
   const hy = y(last.avg);
-  svg.append(s('circle', { cx: hx, cy: hy, r: 5.5, fill: 'var(--bg)' }));
+  svg.append(s('circle', { cx: hx, cy: hy, r: 5.5, fill: 'var(--card)' }));
   svg.append(s('circle', { cx: hx, cy: hy, r: 3.5, fill: 'var(--accent)' }));
 
   return svg;
@@ -170,7 +170,7 @@ export function weightChart({ points, avg, width, height = 210 }) {
  *
  * @param {{date: string, value: number}[]} points ascending
  */
-export function sparkline(points, { width = 78, height = 26, color = 'var(--accent)' } = {}) {
+export function sparkline(points, { width = 78, height = 26, color = 'var(--chart-line)' } = {}) {
   const svg = s('svg', {
     viewBox: `0 0 ${width} ${height}`,
     width, height,
@@ -254,7 +254,7 @@ export function dailyBars({ days, target, width, height = 132 }) {
       y: day.value > 0 ? top : PAD_T + plotH - 2,
       height: day.value > 0 ? Math.max(2, PAD_T + plotH - top) : 2,
       rx: 3,
-      fill: day.value > 0 ? 'var(--accent)' : 'var(--line)',
+      fill: day.value > 0 ? 'var(--chart-line)' : 'var(--chart-empty)',
       opacity: day.isToday ? 1 : 0.72,
     }));
   }
@@ -263,7 +263,7 @@ export function dailyBars({ days, target, width, height = 132 }) {
     const ty = y(target);
     svg.append(s('line', {
       x1: 0, x2: w, y1: ty, y2: ty,
-      stroke: 'var(--ink-faint)',
+      stroke: 'var(--label-3)',
       'stroke-width': 1.5,
       'stroke-dasharray': '5 4',
     }));
@@ -273,7 +273,7 @@ export function dailyBars({ days, target, width, height = 132 }) {
   const label = (text, x, anchor) => {
     const node = s('text', {
       x, y: height - 4, 'text-anchor': anchor,
-      fill: 'var(--ink-faint)', 'font-size': 10, 'font-weight': 600,
+      fill: 'var(--label-3)', 'font-size': 10, 'font-weight': 600,
     });
     node.textContent = text;
     return node;
