@@ -14,7 +14,7 @@
  */
 
 const DB_NAME = 'fitness-tracker';
-const DB_VERSION = 2;
+const DB_VERSION = 3;
 
 /** Every store, in the order export/import walks them. Parents before children:
  *  restoring exercises before workoutSets keeps foreign keys meaningful. */
@@ -24,6 +24,8 @@ export const STORES = [
   'measurements',
   'exercises',
   'workoutSets',
+  'foods',
+  'foodEntries',
   'plans',
   'plannedSessions',
   'completedSessions',
@@ -78,6 +80,19 @@ function migrate(db, oldVersion, tx) {
     DEFAULT_MEASUREMENT_FIELDS.forEach((name, i) => {
       fieldStore.add({ name, active: true, order: i });
     });
+  }
+
+  if (oldVersion < 3) {
+    const auto = { keyPath: 'id', autoIncrement: true };
+
+    // Same normalised-key trick as exercises: "Porridge" and "porridge" are one
+    // food with one remembered calorie count, not two.
+    const foods = db.createObjectStore('foods', auto);
+    foods.createIndex('key', 'key', { unique: true });
+
+    const entries = db.createObjectStore('foodEntries', auto);
+    entries.createIndex('date', 'date');
+    entries.createIndex('foodId', 'foodId');
   }
 }
 
@@ -249,6 +264,66 @@ export async function deleteSets(date, exerciseId) {
     tx.oncomplete = () => resolve(existing.length);
     tx.onerror = () => reject(tx.error);
   });
+}
+
+/* --------------------------------------------------------------- calories */
+
+export const MEALS = [
+  { key: 'breakfast', label: 'Breakfast' },
+  { key: 'lunch',     label: 'Lunch' },
+  { key: 'dinner',    label: 'Dinner' },
+  { key: 'snack',     label: 'Snacks' },
+];
+
+const foodKey = (name) => name.trim().toLowerCase().replace(/\s+/g, ' ');
+
+export function listFoods() {
+  return all('foods').then((rows) =>
+    (rows || []).sort((a, b) => a.name.localeCompare(b.name)));
+}
+
+/**
+ * Find or create a food, remembering the calories last used for it.
+ * The remembered figure is what makes the second helping two taps.
+ */
+export async function ensureFood(name, kcal) {
+  const clean = name.trim().replace(/\s+/g, ' ');
+  const key = foodKey(clean);
+  const existing = (await byIndex('foods', 'key', key))[0];
+
+  if (existing) {
+    if (kcal !== undefined && kcal !== null && existing.lastKcal !== kcal) {
+      await put('foods', { ...existing, lastKcal: kcal });
+    }
+    return { ...existing, lastKcal: kcal ?? existing.lastKcal };
+  }
+
+  const record = { name: clean, key, lastKcal: kcal ?? null };
+  const id = await add('foods', record);
+  return { ...record, id };
+}
+
+export const listFoodEntries = () =>
+  all('foodEntries').then((rows) => rows.sort(byDate));
+
+export const listFoodEntriesOnDate = (date) =>
+  byIndex('foodEntries', 'date', date);
+
+export async function putFoodEntry(entry) {
+  if (entry.id) {
+    await put('foodEntries', entry);
+    return entry;
+  }
+  const id = await add('foodEntries', entry);
+  return { ...entry, id };
+}
+
+export const deleteFoodEntry = (id) => remove('foodEntries', id);
+
+/** Delete a food and every entry that used it. */
+export async function deleteFood(foodId) {
+  await removeByIndex('foodEntries', 'foodId', foodId);
+  await remove('foods', foodId);
 }
 
 /* ------------------------------------------------------------- measurements */

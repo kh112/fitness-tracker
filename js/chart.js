@@ -214,6 +214,78 @@ export function sparkline(points, { width = 78, height = 26, color = 'var(--acce
   return svg;
 }
 
+/**
+ * Daily bars with an optional target line. Used for calorie intake, where the
+ * question is "how did today compare to the other days", not "what is the
+ * smooth trend" — so bars, one per day, gaps included as empty slots.
+ *
+ * @param {{date: string, value: number}[]} days ascending, one per calendar day
+ * @param {number|null} target
+ */
+export function dailyBars({ days, target, width, height = 132 }) {
+  const PAD_T = 12, PAD_B = 18;
+  const w = Math.max(width, 240);
+  const plotH = height - PAD_T - PAD_B;
+
+  const svg = s('svg', {
+    class: 'chart',
+    viewBox: `0 0 ${w} ${height}`,
+    width: w, height,
+    role: 'img',
+    'aria-label': days.length
+      ? `Daily intake for the last ${days.length} days`
+      : 'Daily intake, nothing logged yet',
+  });
+  if (days.length === 0) return svg;
+
+  const peak = Math.max(...days.map((d) => d.value), target ?? 0, 1);
+  const y = (v) => PAD_T + (1 - v / (peak * 1.1)) * plotH;
+
+  const slot = w / days.length;
+  const barW = Math.max(3, Math.min(slot - 3, 26));
+
+  for (const [i, day] of days.entries()) {
+    const x = i * slot + (slot - barW) / 2;
+    const top = day.value > 0 ? y(day.value) : PAD_T + plotH;
+    // Empty days still get a stub, so a gap reads as "logged nothing" rather
+    // than the day silently not existing.
+    svg.append(s('rect', {
+      x, width: barW,
+      y: day.value > 0 ? top : PAD_T + plotH - 2,
+      height: day.value > 0 ? Math.max(2, PAD_T + plotH - top) : 2,
+      rx: 3,
+      fill: day.value > 0 ? 'var(--accent)' : 'var(--line)',
+      opacity: day.isToday ? 1 : 0.72,
+    }));
+  }
+
+  if (target) {
+    const ty = y(target);
+    svg.append(s('line', {
+      x1: 0, x2: w, y1: ty, y2: ty,
+      stroke: 'var(--ink-faint)',
+      'stroke-width': 1.5,
+      'stroke-dasharray': '5 4',
+    }));
+  }
+
+  // First and last day labels only — anything more is unreadable at this size.
+  const label = (text, x, anchor) => {
+    const node = s('text', {
+      x, y: height - 4, 'text-anchor': anchor,
+      fill: 'var(--ink-faint)', 'font-size': 10, 'font-weight': 600,
+    });
+    node.textContent = text;
+    return node;
+  };
+  svg.append(label(fmtDate(days[0].date), 0, 'start'));
+  if (days.length > 1) {
+    svg.append(label(fmtDate(days[days.length - 1].date), w, 'end'));
+  }
+
+  return svg;
+}
+
 function describe(points) {
   if (!points.length) return 'Weight chart, no entries yet';
   const first = points[0];

@@ -81,11 +81,14 @@ export function icon(name) {
     close: 'M6 6l12 12M18 6L6 18',
     check: 'M4 12.5l5.2 5.2L20 7',
     chevron: 'M6 9l6 6 6-6',
+    chevronLeft: 'M15 6l-6 6 6 6',
+    chevronRight: 'M9 6l6 6-6 6',
     // tab glyphs
     weight: 'M3 17l6-6 4 4 8-8',
     lifts: 'M6.5 6.5v11M17.5 6.5v11M3.5 9.5v5M20.5 9.5v5M6.5 12h11',
     plan: 'M4 7h16v13H4zM4 11h16M8 3.5V7M16 3.5V7',
     body: 'M4 9h16v6H4zM8 9v3.5M12 9v3.5M16 9v3.5',
+    food: 'M6 3.5v7a2.5 2.5 0 005 0v-7M8.5 10.5v10M17.5 3.5c-1.4 1-2 3-2 5.5s.6 3.5 2 3.5v7.5',
     data: 'M12 3.5v12M7.5 11l4.5 4.5L16.5 11M4 20.5h16',
     upload: 'M12 15.5v-12M7.5 8L12 3.5 16.5 8M4 20.5h16',
   };

@@ -33,9 +33,13 @@ things it must do:
 ### Non-goals
 - No cloud sync, no login, no backend
 - No social features, sharing, or leaderboards
-- No calorie/nutrition tracking
 - No auto-generated training plans
 - No wearable or Strava integration (maybe later, not now)
+
+> **Changed 2 Aug 2026:** "No calorie/nutrition tracking" was a non-goal and is
+> no longer — a Food tab was added on request. It stays within the other
+> constraints: no food database, no barcode scanning, no network. You type your
+> own numbers, and foods remember what you last gave them.
 
 ## 3. Features in detail
 
@@ -68,6 +72,15 @@ things it must do:
 - Weekly summary: planned km vs actual km
 - Plan is typically 16–20 weeks with a target race date; show weeks counting down to it
 
+### Calorie intake (added after the original brief)
+- Per-item entries: food name + kcal, grouped into breakfast / lunch / dinner / snacks
+- Food names autocomplete from what you've logged before **and carry the calories
+  you last gave them**, so a repeat item is two taps
+- A single flat daily target, optional. No training-load adjustment — but energy
+  needs rise a lot on long-run days, so the target UI is worded as a reference
+  rather than a limit
+- Day stepper for back-filling yesterday; 14-day bar chart with the target line
+
 ### Data export
 - A visible "Download my data" button producing a single JSON file of everything
 - This matters more than usual: **iOS can evict storage from web apps that go unused for
@@ -84,6 +97,8 @@ measurements:  { id, date, field, cm }
 measurementFields: { id, name, active, order }
 exercises:     { id, name }
 workoutSets:   { id, date, exerciseId, setIndex, reps, kg? }
+foods:         { id, name, key, lastKcal }
+foodEntries:   { id, date, foodId, kcal, meal }
 plan:          { id, name, raceDate, startDate }
 plannedSessions: { id, planId, weekIndex, dayOfWeek, type, km }
 completedSessions: { id, plannedSessionId?, date, km, notes? }

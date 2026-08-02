@@ -79,6 +79,7 @@ function summaryRows(counts) {
     weights: 'Weigh-ins',
     measurements: 'Measurement readings',
     workoutSets: 'Exercise sets',
+    foodEntries: 'Food entries',
     completedSessions: 'Runs completed',
     plannedSessions: 'Planned sessions',
   };

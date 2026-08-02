@@ -569,6 +569,18 @@ body:has(.tabbar:not([hidden])) .toast { bottom: calc(142px + var(--safe-b)); }
 }
 .chip--new { border-style: dashed; color: var(--ink-dim); }
 
+/* The remembered calorie count, shown on a food suggestion. */
+.chip__kcal {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--ink-faint);
+  font-variant-numeric: tabular-nums;
+}
+.chip[aria-pressed="true"] .chip__kcal { color: var(--accent-ink); opacity: 0.75; }
+
+/* Disabled day-stepper (can't go past today). */
+.icon-btn[disabled] { opacity: 0.3; pointer-events: none; }
+
 /* ------------------------------------------------------- picker grid */
 
 .picker {

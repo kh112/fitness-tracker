@@ -47,7 +47,7 @@ js/app.js               bootstrap + hash router
 js/db.js                IndexedDB wrapper
 js/util.js              dates, formatting, rolling average, DOM helper
 js/chart.js             hand-rolled SVG line chart
-js/views/               one module per screen
+js/views/               one module per screen (weight, lifts, plan, food, body, data)
 icons/                  generated PNGs, committed
 tools/make_icons.py     regenerates icons/ — only run when the mark changes
 serve.py                dev server (not part of the deployed app)

@@ -25,7 +25,7 @@ export async function buildBackup() {
   return {
     format: FORMAT,
     formatVersion: FORMAT_VERSION,
-    appDbVersion: 2,
+    appDbVersion: 3,
     exportedAt: new Date().toISOString(),
     counts: Object.fromEntries(db.STORES.map((s) => [s, (data[s] ?? []).length])),
     data,
@@ -121,10 +121,14 @@ export async function restoreBackup(backup) {
 
   await reinsert('exercises', src.exercises);
   await reinsert('measurementFields', src.measurementFields);
+  await reinsert('foods', src.foods);
   await reinsert('plans', src.plans);
 
   await reinsert('workoutSets', src.workoutSets, (r) => ({
     ...r, exerciseId: remap.exercises.get(r.exerciseId) ?? r.exerciseId,
+  }));
+  await reinsert('foodEntries', src.foodEntries, (r) => ({
+    ...r, foodId: remap.foods.get(r.foodId) ?? r.foodId,
   }));
   await reinsert('measurements', src.measurements, (r) => ({
     ...r, fieldId: remap.measurementFields.get(r.fieldId) ?? r.fieldId,

@@ -9,6 +9,7 @@
 import * as weight from './views/weight.js';
 import * as lifts from './views/lifts.js';
 import * as plan from './views/plan.js';
+import * as food from './views/food.js';
 import * as body from './views/body.js';
 import * as data from './views/data.js';
 import { el, mount } from './util.js';
@@ -18,6 +19,7 @@ const routes = [
   { path: '#/weight', label: 'Weight', title: 'Weight',   icon: 'weight', view: weight },
   { path: '#/lifts',  label: 'Lifts',  title: 'Lifts',    icon: 'lifts',  view: lifts },
   { path: '#/plan',   label: 'Plan',   title: 'Training plan', icon: 'plan', view: plan },
+  { path: '#/food',   label: 'Food',   title: 'Calories', icon: 'food',   view: food },
   { path: '#/body',   label: 'Body',   title: 'Measurements',  icon: 'body', view: body },
   { path: '#/data',   label: 'Data',   title: 'Your data', icon: 'data',   view: data },
 ];
