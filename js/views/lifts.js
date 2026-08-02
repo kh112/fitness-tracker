@@ -12,9 +12,10 @@
  */
 
 import * as db from '../db.js';
-import { toast, confirmDialog, sheet, sheetHead, icon } from '../ui.js';
+import { toast, confirmDialog, sheet, sheetHead, navAction, icon } from '../ui.js';
 import {
   el, mount, todayISO, fmtDate, fmtDateRelative, fmtKg, isValidISO, round1,
+  parseDecimal,
 } from '../util.js';
 
 let sets = [];            // every workoutSet row
@@ -50,10 +51,9 @@ export async function render(view) {
           )
         : null,
     ),
-    el('button', {
-      class: 'fab', type: 'button', onclick: () => openSheet(null),
-    }, icon('plus'), 'Log exercise'),
   );
+
+  navAction('Log exercise', () => openSheet(null));
 }
 
 /** Map<date, [{exercise, sets}]> in date order. */
@@ -205,7 +205,7 @@ function openSheet(existing) {
             oninput: (e) => { rows[i].reps = e.target.value; },
           }),
           el('input', {
-            type: 'number', inputmode: 'decimal', step: '0.5', min: '0', max: '999',
+            type: 'text', inputmode: 'decimal',
             placeholder: 'body', value: row.kg,
             'aria-label': `Set ${i + 1} weight in kilograms, leave blank for bodyweight`,
             oninput: (e) => { rows[i].kg = e.target.value; },
@@ -353,7 +353,7 @@ function openSheet(existing) {
       }
       let kg = null;
       if (String(row.kg).trim() !== '') {
-        kg = Number(row.kg);
+        kg = parseDecimal(row.kg);
         if (!Number.isFinite(kg) || kg < 0 || kg > 999) {
           error.textContent = 'Weight must be between 0 and 999 kg, or blank for bodyweight.';
           return;

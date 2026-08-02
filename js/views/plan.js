@@ -11,10 +11,10 @@
  */
 
 import * as db from '../db.js';
-import { toast, confirmDialog, sheet, sheetHead, icon } from '../ui.js';
+import { toast, confirmDialog, sheet, sheetHead, navAction, icon } from '../ui.js';
 import {
   el, mount, todayISO, addDays, daysBetween, startOfWeek, fmtDate,
-  fmtWeekSpan, fmtKm, isValidISO, round1, DAY_NAMES,
+  fmtWeekSpan, fmtKm, isValidISO, round1, DAY_NAMES, parseDecimal,
 } from '../util.js';
 
 export const TYPES = [
@@ -69,10 +69,9 @@ export async function render(view) {
         el('div', {}, weeks.map(weekCard)),
       ),
     ),
-    el('button', {
-      class: 'fab', type: 'button', onclick: () => openCompletion(null, null),
-    }, icon('plus'), 'Log a run'),
   );
+
+  navAction('Log a run', () => openCompletion(null, null));
 }
 
 /* ------------------------------------------------------------ structure */
@@ -340,7 +339,7 @@ function openPlannedEditor(week, day) {
 
   const kmField = el('div', { class: 'field' });
   const kmInput = el('input', {
-    type: 'number', inputmode: 'decimal', step: '0.1', min: '0', max: '200',
+    type: 'text', inputmode: 'decimal',
     id: 'pl-km', placeholder: '0', value: existing?.km ? fmtKm(existing.km) : '',
   });
   const picker = el('div', { class: 'picker' });
@@ -396,7 +395,7 @@ function openPlannedEditor(week, day) {
 
     let km = 0;
     if (typeOf(type).hasKm) {
-      km = Number(kmInput.value);
+      km = parseDecimal(kmInput.value);
       if (!Number.isFinite(km) || km <= 0 || km > 200) {
         error.textContent = 'Enter a distance between 0 and 200 km.';
         return;
@@ -432,7 +431,7 @@ function openPlannedEditor(week, day) {
  */
 function openCompletion(plannedSession, existing, date) {
   const kmInput = el('input', {
-    type: 'number', inputmode: 'decimal', step: '0.1', min: '0', max: '200',
+    type: 'text', inputmode: 'decimal',
     id: 'c-km', placeholder: '0',
     value: existing ? fmtKm(existing.km) : (plannedSession ? fmtKm(plannedSession.km) : ''),
   });
@@ -487,7 +486,7 @@ function openCompletion(plannedSession, existing, date) {
     event.preventDefault();
     error.textContent = '';
 
-    const km = Number(kmInput.value);
+    const km = parseDecimal(kmInput.value);
     if (!Number.isFinite(km) || km <= 0 || km > 200) {
       error.textContent = 'Enter a distance between 0 and 200 km.'; return;
     }

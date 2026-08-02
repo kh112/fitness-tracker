@@ -1,16 +1,15 @@
 /* Weight view — the app's home screen.
  *
  * Layout priority, top to bottom: what you weigh now, how it's trending, then
- * the raw entries. The log button is a fixed FAB so "log the thing I just did"
- * is one tap from launch, regardless of scroll position.
+ * the raw entries. The log action lives in the top-right of the nav bar.
  */
 
 import * as db from '../db.js';
 import { weightChart } from '../chart.js';
-import { toast, confirmDialog, sheet, sheetHead, icon } from '../ui.js';
+import { toast, confirmDialog, sheet, sheetHead, navAction, icon } from '../ui.js';
 import {
   el, mount, todayISO, addDays, daysBetween, fmtDate, fmtDateRelative,
-  fmtKg, fmtDelta, isValidISO, rollingAverage,
+  fmtKg, fmtDelta, isValidISO, rollingAverage, parseDecimal,
 } from '../util.js';
 
 const RANGES = [
@@ -33,9 +32,9 @@ export async function render(view) {
       chartSection(),
       entriesSection(),
     ),
-    fab(),
   );
 
+  navAction('Log weight', () => openSheet(null));
   drawChart();
   observeChart();
 }
@@ -249,14 +248,6 @@ function entriesSection() {
 
 /* ------------------------------------------------------------------- log */
 
-function fab() {
-  return el('button', {
-    class: 'fab',
-    type: 'button',
-    onclick: () => openSheet(null),
-  }, icon('plus'), 'Log weight');
-}
-
 /**
  * @param {{date: string, kg: number}|null} existing editing an entry, or null to add
  */
@@ -272,16 +263,14 @@ function openSheet(existing) {
     required: true,
   });
 
+  // type=text, not number: a comma decimal makes a number input report an
+  // empty value. See parseDecimal in util.js.
   const kgInput = el('input', {
-    type: 'number',
+    type: 'text',
     id: 'w-kg',
     inputmode: 'decimal',
-    step: '0.1',
-    min: '20',
-    max: '400',
     placeholder: '0.0',
     value: existing ? fmtKg(existing.kg) : '',
-    required: true,
   });
 
   const error = el('div', { class: 'field__error', role: 'alert' });
@@ -317,7 +306,7 @@ function openSheet(existing) {
     error.textContent = '';
 
     const date = dateInput.value;
-    const kg = Number(kgInput.value);
+    const kg = parseDecimal(kgInput.value);
 
     if (!isValidISO(date)) { error.textContent = 'Pick a valid date.'; return; }
     if (date > todayISO()) { error.textContent = "That's in the future."; return; }

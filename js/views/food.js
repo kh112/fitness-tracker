@@ -13,7 +13,7 @@
 
 import * as db from '../db.js';
 import { dailyBars } from '../chart.js';
-import { toast, confirmDialog, sheet, sheetHead, icon } from '../ui.js';
+import { toast, confirmDialog, sheet, sheetHead, navAction, icon } from '../ui.js';
 import {
   el, mount, todayISO, addDays, fmtDate, fmtDateRelative, isValidISO,
 } from '../util.js';
@@ -44,10 +44,9 @@ export async function render(view) {
       trendSection(),
       mealsSection(forDay),
     ),
-    el('button', {
-      class: 'fab', type: 'button', onclick: () => openSheet(null),
-    }, icon('plus'), 'Log food'),
   );
+
+  navAction('Log food', () => openSheet(null));
 }
 
 /* ------------------------------------------------------------------- hero */

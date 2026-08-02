@@ -83,6 +83,30 @@ export function confirmDialog({ title, body, confirmLabel = 'Confirm', danger = 
 }
 
 /**
+ * Put the screen's primary action in the top-right of the nav bar.
+ * Called by each view during render; app.js clears the slot on navigation so
+ * a screen never inherits the previous one's action.
+ *
+ * @param {string} label accessible name, e.g. "Log weight"
+ * @param {() => void} onClick
+ */
+export function navAction(label, onClick) {
+  const slot = document.getElementById('topbar-slot');
+  if (!slot) return;
+  // The glyph sits on a filled orange tile rather than being an orange glyph
+  // on white: bright orange on white is 2.2:1, and this is the one control
+  // that must never be hard to find. Dark ink on the fill runs 9.5:1.
+  slot.replaceChildren(el('button', {
+    class: 'nav-action', type: 'button', 'aria-label': label, title: label,
+    onclick: onClick,
+  }, el('span', { class: 'nav-action__tile' }, icon('plus'))));
+}
+
+export function clearNavAction() {
+  document.getElementById('topbar-slot')?.replaceChildren();
+}
+
+/**
  * The modal nav bar iOS sheets use: Cancel on the left, title centred.
  * There's deliberately no Done on the right — the primary action stays as a
  * full-width button at the bottom of the sheet, within thumb reach.

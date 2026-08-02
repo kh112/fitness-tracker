@@ -13,7 +13,7 @@ import * as food from './views/food.js';
 import * as body from './views/body.js';
 import * as data from './views/data.js';
 import { el, mount } from './util.js';
-import { icon } from './ui.js';
+import { icon, clearNavAction } from './ui.js';
 
 /* `tint` is the Health-style category colour for the screen — used on card
    headers, not on controls. The accent stays uniform across the app. */
@@ -42,6 +42,9 @@ async function renderRoute() {
   view.style.setProperty('--tint', `var(--c-${route.tint})`);
 
   syncTabs();          // highlight the tab immediately, before any await
+  // Each view installs its own; clear first so a screen with no primary
+  // action doesn't inherit the previous screen's button.
+  clearNavAction();
 
   try {
     await route.view.render(view);

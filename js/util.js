@@ -98,6 +98,33 @@ export function round1(n) {
   return Math.round(Number(n) * 10) / 10;
 }
 
+/**
+ * Parse a decimal the user typed, accepting a comma or a dot.
+ *
+ * This exists because `<input type="number">` is locale-hostile: on a keyboard
+ * whose decimal key is a comma — which is most of Europe, including here —
+ * typing "79,2" makes the input *invalid*, and reading `.value` returns an
+ * empty string. Not "79", not "79.2". Nothing. The number silently disappears
+ * on the way out of the field.
+ *
+ * So every decimal field in this app is `type="text"` with
+ * `inputmode="decimal"` (which still raises the numeric keypad) and comes
+ * through here instead.
+ *
+ * @param {string} raw
+ * @returns {number} NaN when the text isn't a plain number
+ */
+export function parseDecimal(raw) {
+  const text = String(raw ?? '').trim().replace(',', '.');
+  if (text === '') return NaN;
+  // Reject anything that isn't purely a number — Number() is far too generous
+  // ("0x10", "1e5" all parse), and a typo should fail loudly. A trailing
+  // separator is allowed: "79," is what you have after typing the comma but
+  // before the decimal, and it should mean 79 rather than an error.
+  if (!/^-?(\d+\.?\d*|\.\d+)$/.test(text)) return NaN;
+  return Number(text);
+}
+
 /** Signed, one decimal: '+0.4', '-1.2', '0.0'. */
 export function fmtDelta(n) {
   const s = n.toFixed(1);

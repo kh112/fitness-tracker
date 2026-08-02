@@ -116,11 +116,19 @@ wasn't on the plan, and that shouldn't be unrecordable.
 > deliberately about half Apple's.
 >
 > Theme is **light only** — the earlier dark-only choice was reversed. Accent is
-> orange, in two shades: bright `#FF9500` for large fills that carry dark ink,
-> and `#C2410C` for anything that is itself text or a thin line. The reasoning
-> and the measured ratios are at the top of `css/app.css`; several of Apple's
-> own light-mode values fail WCAG AA and this app's gym-lighting requirement
-> outranks matching iOS exactly.
+> bright orange `#FF9500` everywhere, by explicit request. Note the cost, which
+> is measured at the top of `css/app.css`: as *text* on white that orange is
+> ~2.0–2.2:1, below the 4.5:1 AA floor. It is fine as a fill (dark ink on it
+> runs 9.5:1), so the primary action is a filled orange tile rather than an
+> orange glyph. Five small orange labels remain below floor; they are all
+> paired with a black-text neighbour so nothing is orange-only.
+>
+> **Decimal input:** every decimal field is `type="text"` + `inputmode="decimal"`,
+> parsed by `parseDecimal()`. Do not "fix" them back to `type="number"` — on a
+> comma-decimal keyboard that makes `.value` return an empty string and the
+> number silently vanishes.
+>
+> **Primary action** sits top-right in the nav bar, not in a floating button.
 
 Read the frontend-design guidance and make real choices, but these constraints come from
 how it actually gets used:

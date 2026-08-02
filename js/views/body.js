@@ -12,9 +12,10 @@
 
 import * as db from '../db.js';
 import { sparkline } from '../chart.js';
-import { toast, confirmDialog, sheet, sheetHead, icon } from '../ui.js';
+import { toast, confirmDialog, sheet, sheetHead, navAction, icon } from '../ui.js';
 import {
   el, mount, todayISO, fmtDate, fmtDateRelative, fmtDelta, isValidISO, round1,
+  parseDecimal,
 } from '../util.js';
 
 let fields = [];
@@ -63,10 +64,9 @@ export async function render(view) {
             'Tape measure, same time of day, same spot each time. '
             + 'Every week or two is plenty.'),
     ),
-    el('button', {
-      class: 'fab', type: 'button', onclick: () => openSheet(null),
-    }, icon('plus'), 'Log measurements'),
   );
+
+  navAction('Log measurements', () => openSheet(null));
 }
 
 /** Map<date, Map<fieldId, row>> */
@@ -182,7 +182,7 @@ function openSheet(date) {
     const last = history[history.length - 1];
 
     const input = el('input', {
-      type: 'number', inputmode: 'decimal', step: '0.1', min: '1', max: '300',
+      type: 'text', inputmode: 'decimal',
       id: `m-${field.id}`,
       // Last reading as placeholder rather than as a value: prefilling would
       // silently record a measurement you never actually took.
@@ -224,7 +224,7 @@ function openSheet(date) {
     for (const [fieldId, input] of inputs) {
       const raw = input.value.trim();
       if (raw === '') { values[fieldId] = null; continue; }
-      const cm = Number(raw);
+      const cm = parseDecimal(raw);
       if (!Number.isFinite(cm) || cm < 1 || cm > 300) {
         error.textContent = 'Measurements must be between 1 and 300 cm.';
         input.focus();
