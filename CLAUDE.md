@@ -111,6 +111,29 @@ things it must do:
   and are deliberately *not* keyboard-focusable — a year of logging would be 365
   tab stops; the day stepper is the keyboard and screen-reader path.
 
+### Caching, and why a deploy lands on the first launch
+
+> **Changed 24 Aug 2026** after shipping three changes the phone kept not
+> showing.
+
+`sw.js` used to serve *all* assets stale-while-revalidate: cached copy now,
+fresh copy quietly stashed for next time. That makes every deploy one launch
+behind, and with ES modules it is worse than one behind — `index.html` comes
+network-first while its imports come from cache, so a fresh module can import
+a stale one and the app runs as a blend of two builds.
+
+Now: navigations and **code** (`.js`, `.css`, `.webmanifest`) are network-first
+with a short timeout and a cache fallback; icons stay stale-while-revalidate.
+Offline is unaffected — with no route to the host `fetch` rejects immediately
+rather than waiting out the timeout, measured at 8ms to boot from cache with
+the server dead. `skipWaiting()` is now called, so a new worker takes over on
+the launch that finds it rather than the one after.
+
+The Data tab has **Reinstall the app**: clears the offline copy and re-downloads
+it, without touching IndexedDB. It also prints the cache name (`tracker-v7`),
+which is the closest thing to a version number a build-step-free app gets — if
+the phone and the repo disagree about what shipped, that line is where to look.
+
 ### Data export
 - A visible "Download my data" button producing a single JSON file of everything
 - This matters more than usual: **iOS can evict storage from web apps that go unused for

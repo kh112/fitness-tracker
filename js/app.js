@@ -127,10 +127,13 @@ async function requestPersistence() {
 window.addEventListener('hashchange', renderRoute);
 
 // Normalise an unknown or missing hash without firing a navigation event, so
-// there's exactly one render on startup.
-if (!routes.some((r) => r.path === location.hash)) {
-  history.replaceState(null, '', `${location.pathname}${DEFAULT_ROUTE}`);
-}
+// there's exactly one render on startup. The `reinstall` param is the cache
+// buster the Data screen reloads through; it has done its job by now and
+// shouldn't stay in the address bar.
+const url = new URL(location.href);
+url.searchParams.delete('reinstall');
+if (!routes.some((r) => r.path === url.hash)) url.hash = DEFAULT_ROUTE;
+if (url.href !== location.href) history.replaceState(null, '', url);
 
 renderRoute();
 registerServiceWorker();

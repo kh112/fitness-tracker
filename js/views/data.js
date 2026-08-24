@@ -60,8 +60,94 @@ export async function render(view) {
         el('h2', { class: 'section__title', text: "What's stored" }),
         el('div', { class: 'panel' }, summaryRows(counts)),
       ),
+
+      appSection(),
     ),
   );
+}
+
+/* ------------------------------------------------------------------- app */
+
+function appSection() {
+  const buildNote = el('div', { class: 'muted-note', text: ' ' });
+  showInstalledBuild(buildNote);
+
+  return el('section', { class: 'section' },
+    el('h2', { class: 'section__title', text: 'App' }),
+    el('div', { class: 'panel stack' },
+      el('div', { class: 'muted-note' },
+        'The app keeps a copy of itself on this device so it opens without a '
+        + 'signal. If a change you were expecting has not shown up, this throws '
+        + 'that copy away and fetches a fresh one. It does not touch anything '
+        + 'you have logged.'),
+      el('button', {
+        class: 'btn btn--block', type: 'button', onclick: reinstall,
+      }, 'Reinstall the app'),
+      buildNote,
+    ),
+  );
+}
+
+/**
+ * Name the cache the service worker keeps the app in. It's the only version
+ * number this app has — no build step to stamp one in — but it answers "did
+ * the new build actually land" without guessing.
+ *
+ * Filled in after render rather than before it: the cache isn't populated
+ * until the worker activates, and a screen that says "no offline copy" three
+ * seconds after making one is worse than a line that arrives late. Blocking
+ * the whole screen on it would be worse still — where service workers don't
+ * run at all (the LAN dev server is plain http) `ready` never resolves.
+ */
+async function showInstalledBuild(node) {
+  if (!('caches' in self)) {
+    node.textContent = 'No offline copy on this device.';
+    return;
+  }
+  try {
+    if ('serviceWorker' in navigator) {
+      await Promise.race([
+        navigator.serviceWorker.ready,
+        new Promise((resolve) => setTimeout(resolve, 3000)),
+      ]);
+    }
+    const key = (await caches.keys()).find((k) => k.startsWith('tracker-'));
+    node.textContent = key
+      ? `Offline copy: ${key}`
+      : 'No offline copy on this device yet.';
+  } catch {
+    node.textContent = 'No offline copy on this device.';
+  }
+}
+
+async function reinstall() {
+  const ok = await confirmDialog({
+    title: 'Reinstall the app?',
+    body: 'Throws away the offline copy and downloads the app again. '
+        + 'Your weigh-ins, food and everything else stay exactly as they are.',
+    confirmLabel: 'Reinstall',
+  });
+  if (!ok) return;
+
+  try {
+    if ('serviceWorker' in navigator) {
+      for (const reg of await navigator.serviceWorker.getRegistrations()) {
+        await reg.unregister();
+      }
+    }
+    if ('caches' in self) {
+      for (const key of await caches.keys()) await caches.delete(key);
+    }
+  } catch (err) {
+    // Reload anyway — a partial clear still gets you closer than not trying.
+    console.warn('Reinstall cleanup failed:', err);
+  }
+
+  // Cache-bust the document itself, so the reload can't be answered from the
+  // browser's own HTTP cache after the service worker has stepped aside.
+  const url = new URL(location.href);
+  url.searchParams.set('reinstall', String(Math.floor(performance.now())));
+  location.replace(url);
 }
 
 function reminderBanner(days) {
