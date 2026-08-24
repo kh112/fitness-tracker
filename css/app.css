@@ -223,6 +223,16 @@ button, input, select, textarea { font: inherit; color: inherit; }
 }
 .section__action:active { opacity: 0.5; }
 
+/* A plain right-hand label in a section head, where .section__action would be
+   a tappable orange one. Used for the span a chart covers. */
+.section__note {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--label-2);
+  letter-spacing: -0.005em;
+  white-space: nowrap;
+}
+
 /* --------------------------------------------------------- cards */
 
 .panel {
@@ -355,37 +365,6 @@ button, input, select, textarea { font: inherit; color: inherit; }
 .chart-legend span { display: inline-flex; align-items: center; gap: 6px; }
 .chart-legend i { width: 14px; height: 3px; border-radius: 1px; background: var(--accent); }
 .chart-legend i.dot { width: 7px; height: 7px; border-radius: 2px; background: var(--label-3); }
-
-/* --------------------------------------------- segmented control */
-
-.segmented {
-  display: inline-flex;
-  gap: 2px;
-  background: var(--fill);
-  border-radius: var(--r-control);
-  padding: 2px;
-}
-
-.segmented button {
-  appearance: none;
-  border: 0;
-  background: transparent;
-  color: var(--label);
-  font-size: 13px;
-  font-weight: 500;
-  letter-spacing: -0.005em;
-  padding: 0 14px;
-  /* Apple's segment is 32px and relies on an invisible 44pt hit region.
-     Made physically bigger instead — sweaty thumbs, no hover to aim with. */
-  min-height: 40px;
-  border-radius: 4px;
-  cursor: pointer;
-}
-.segmented button[aria-pressed="true"] {
-  background: #ffffff;
-  font-weight: 600;
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.14);
-}
 
 /* ---------------------------------------------------- list rows */
 

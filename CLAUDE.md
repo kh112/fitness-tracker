@@ -60,12 +60,16 @@ things it must do:
 - Editable and deletable entries — I will typo things
 - One entry per day; logging again the same day overwrites, with a confirm
 - **The two hero tiles both run since the first weigh-in** (changed 24 Aug 2026
-  from rolling 7-day and 30-day windows): average change per day, and total
-  change since that date. The far end of both is the 7-day average, so one
-  dehydrated morning can't read as progress; the near end is the first entry
-  itself. On a log only a few days old that makes the total differ from
-  first-row-minus-last-row — the averaging is the point, and the hero line
-  above the tiles shows the average it used.
+  from rolling 7-day and 30-day windows): average change per day **in grams**
+  (`-36g`, no unit suffix beyond the g), and total change in kg since that
+  date. The far end of both is the 7-day average, so one dehydrated morning
+  can't read as progress; the near end is the first entry itself. On a log only
+  a few days old that makes the total differ from first-row-minus-last-row —
+  the averaging is the point, and the hero line above the tiles shows the
+  average it used.
+- **No chart range picker** (removed 24 Aug 2026). The chart always draws the
+  whole log; the section head names the span. The `.segmented` CSS went with
+  it — nothing else used it.
 
 ### Body measurements
 - Default fields: chest, waist, hips, thigh, upper arm (cm)

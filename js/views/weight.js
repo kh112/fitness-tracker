@@ -8,17 +8,10 @@ import * as db from '../db.js';
 import { weightChart } from '../chart.js';
 import { toast, confirmDialog, sheet, sheetHead, navAction, icon } from '../ui.js';
 import {
-  el, mount, todayISO, addDays, daysBetween, fmtDate, fmtDateRelative,
+  el, mount, todayISO, daysBetween, fmtDate, fmtDateRelative,
   fmtKg, fmtDelta, isValidISO, rollingAverage, parseDecimal,
 } from '../util.js';
 
-const RANGES = [
-  { key: '30', label: '30d', days: 30 },
-  { key: '90', label: '90d', days: 90 },
-  { key: 'all', label: 'All', days: null },
-];
-
-let rangeKey = '30';
 let rows = [];          // all entries, ascending
 let chartHost = null;   // element the chart is drawn into
 
@@ -64,8 +57,16 @@ function heroSection() {
         `${fmtDateRelative(latest.date)} · 7-day average ${fmtKg(latestAvg)} kg`),
     ),
     el('div', { class: 'hero__stats' },
-      statTile('Average per day', change.perDay, 2, 'kg/day'),
-      statTile(`Since ${fmtDate(rows[0].date)}`, change.total, 1, 'kg'),
+      statTile('Average per day', change.perDay, {
+        // Grams, because kilograms per day is three leading zeros and a
+        // rounding error. Half a gram is the smallest thing this can show.
+        epsilon: 0.0005,
+        format: (kg) => `${fmtDelta(kg * 1000, 0)}g`,
+      }),
+      statTile(`Since ${fmtDate(rows[0].date)}`, change.total, {
+        epsilon: 0.05,
+        format: (kg) => `${fmtDelta(kg, 1)} kg`,
+      }),
     ),
   );
 }
@@ -95,10 +96,13 @@ function sinceStart(avg) {
   return { total, perDay: days > 0 ? total / days : null };
 }
 
-function statTile(label, delta, digits, unit) {
-  // Threshold scales with the precision shown, so a tile reading '-0.02' is
-  // never coloured as flat and one reading '0.0' is never coloured as a loss.
-  const epsilon = 0.5 * Math.pow(10, -digits);
+/**
+ * @param {number|null} delta   change in kg — null renders an em dash
+ * @param {{epsilon: number, format: (kg: number) => string}} opts
+ *   `epsilon` is half the smallest step the tile can display, so a value that
+ *   rounds to zero is coloured flat and one that doesn't never is.
+ */
+function statTile(label, delta, { epsilon, format }) {
   const dir = delta === null ? 'flat'
     : delta > epsilon ? 'up'
     : delta < -epsilon ? 'down'
@@ -108,7 +112,7 @@ function statTile(label, delta, digits, unit) {
     el('div', { class: 'stat__label', text: label }),
     el('div', {
       class: `stat__value stat__value--${dir}`,
-      text: delta === null ? '—' : `${fmtDelta(delta, digits)} ${unit}`,
+      text: delta === null ? '—' : format(delta),
     }),
   );
 }
@@ -126,15 +130,8 @@ function chartSection() {
   return el('section', { class: 'section' },
     el('div', { class: 'section__head' },
       el('h2', { class: 'section__title', text: 'Trend' }),
-      el('div', { class: 'segmented', role: 'group', 'aria-label': 'Chart range' },
-        RANGES.map((r) =>
-          el('button', {
-            type: 'button',
-            'aria-pressed': String(r.key === rangeKey),
-            onclick: () => setRange(r.key),
-          }, r.label),
-        ),
-      ),
+      el('div', { class: 'section__note',
+        text: `Since ${fmtDate(rows[0].date)}` }),
     ),
     el('div', { class: 'panel' },
       chartHost,
@@ -146,24 +143,6 @@ function chartSection() {
   );
 }
 
-function setRange(key) {
-  rangeKey = key;
-  for (const btn of document.querySelectorAll('.segmented button')) {
-    btn.setAttribute('aria-pressed',
-      String(RANGES.find((r) => r.label === btn.textContent).key === key));
-  }
-  drawChart();
-}
-
-function visibleRows() {
-  const range = RANGES.find((r) => r.key === rangeKey);
-  if (!range.days || rows.length === 0) return rows;
-  const cutoff = addDays(rows[rows.length - 1].date, -range.days);
-  const windowed = rows.filter((r) => r.date >= cutoff);
-  // Never render an empty chart just because the range is short.
-  return windowed.length ? windowed : rows.slice(-1);
-}
-
 let lastChartWidth = 0;
 
 function drawChart() {
@@ -171,14 +150,13 @@ function drawChart() {
   const width = chartHost.clientWidth || 358;
   lastChartWidth = width;
 
-  const points = visibleRows();
-  // The average is computed over *all* history so the line entering the
-  // window is already warmed up, then clipped to what's on screen.
-  const fullAvg = rollingAverage(rows, 7);
-  const from = points[0]?.date;
-  const avg = from ? fullAvg.filter((a) => a.date >= from) : [];
-
-  mount(chartHost, weightChart({ points, avg, width }));
+  // The whole log, always. The range picker it replaces spent a segmented
+  // control on hiding data you had already chosen to keep.
+  mount(chartHost, weightChart({
+    points: rows,
+    avg: rollingAverage(rows, 7),
+    width,
+  }));
 }
 
 /* Redraw on layout change — rotating the phone, or the container resizing for
