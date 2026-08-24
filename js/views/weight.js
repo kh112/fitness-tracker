@@ -52,6 +52,7 @@ function heroSection() {
   const latest = rows[rows.length - 1];
   const avg = rollingAverage(rows, 7);
   const latestAvg = avg[avg.length - 1].avg;
+  const change = sinceStart(avg);
 
   return el('section', { class: 'panel hero' },
     el('div', {},
@@ -63,48 +64,51 @@ function heroSection() {
         `${fmtDateRelative(latest.date)} · 7-day average ${fmtKg(latestAvg)} kg`),
     ),
     el('div', { class: 'hero__stats' },
-      statTile('Last 7 days', deltaOver(avg, 7)),
-      statTile('Last 30 days', deltaOver(avg, 30)),
+      statTile('Average per day', change.perDay, 2, 'kg/day'),
+      statTile(`Since ${fmtDate(rows[0].date)}`, change.total, 1, 'kg'),
     ),
   );
 }
 
 /**
- * Change in the 7-day average over the last `days`. Comparing averages rather
- * than raw readings keeps a single dehydrated morning from reading as progress.
- * Returns null when there's no entry old enough to compare against.
+ * Change since the first weigh-in, as a total and as a daily rate.
+ *
+ * The far end is the 7-day average rather than today's raw reading, so one
+ * dehydrated morning can't read as progress. The near end is the first entry
+ * itself — the trailing average of a single point *is* that point — which is
+ * the honest reading of "since the start": it's the number you'd get comparing
+ * the app's first row to its last. The cost is that a bad first weigh-in
+ * skews every since-the-start figure for good, which is a fair trade against
+ * a starting point you can't reconcile with your own log.
+ *
+ * Both are null until there are two entries on different days, because a rate
+ * over a zero-day span is a division by zero wearing a label.
  */
-function deltaOver(avg, days) {
-  if (avg.length < 2) return null;
-  const end = avg[avg.length - 1];
-  const target = addDays(end.date, -days);
+function sinceStart(avg) {
+  if (avg.length < 2) return { total: null, perDay: null };
 
-  let start = null;
-  for (const point of avg) {
-    if (point.date <= target) start = point;
-    else break;
-  }
-  // Nothing that old — fall back to the oldest point, but only if the span is
-  // at least half the window, otherwise the number is noise wearing a label.
-  if (!start) {
-    const oldest = avg[0];
-    if (daysBetween(oldest.date, end.date) < days / 2) return null;
-    start = oldest;
-  }
-  return end.avg - start.avg;
+  const first = avg[0];
+  const last = avg[avg.length - 1];
+  const total = last.avg - first.avg;
+  const days = daysBetween(first.date, last.date);
+
+  return { total, perDay: days > 0 ? total / days : null };
 }
 
-function statTile(label, delta) {
+function statTile(label, delta, digits, unit) {
+  // Threshold scales with the precision shown, so a tile reading '-0.02' is
+  // never coloured as flat and one reading '0.0' is never coloured as a loss.
+  const epsilon = 0.5 * Math.pow(10, -digits);
   const dir = delta === null ? 'flat'
-    : delta > 0.05 ? 'up'
-    : delta < -0.05 ? 'down'
+    : delta > epsilon ? 'up'
+    : delta < -epsilon ? 'down'
     : 'flat';
 
   return el('div', { class: 'stat' },
     el('div', { class: 'stat__label', text: label }),
     el('div', {
       class: `stat__value stat__value--${dir}`,
-      text: delta === null ? '—' : `${fmtDelta(delta)} kg`,
+      text: delta === null ? '—' : `${fmtDelta(delta, digits)} ${unit}`,
     }),
   );
 }

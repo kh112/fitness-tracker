@@ -125,10 +125,19 @@ export function parseDecimal(raw) {
   return Number(text);
 }
 
-/** Signed, one decimal: '+0.4', '-1.2', '0.0'. */
-export function fmtDelta(n) {
-  const s = n.toFixed(1);
-  return n > 0 ? `+${s}` : s;
+/**
+ * Signed, fixed decimals: '+0.4', '-1.2', '0.0'.
+ * `digits` goes to 2 for rates, where a day's worth of change is small enough
+ * that one decimal rounds most of it away.
+ */
+export function fmtDelta(n, digits = 1) {
+  // Round first, then sign. Going the other way prints '-0.0' for a change
+  // too small to show, which reads as a loss that isn't there.
+  const rounded = Number(n.toFixed(digits));
+  const magnitude = Math.abs(rounded).toFixed(digits);
+  if (rounded > 0) return `+${magnitude}`;
+  if (rounded < 0) return `-${magnitude}`;
+  return magnitude;
 }
 
 /**
