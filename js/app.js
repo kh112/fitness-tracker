@@ -16,13 +16,19 @@ import { el, mount } from './util.js';
 import { icon, clearNavAction } from './ui.js';
 
 /* `tint` is the Health-style category colour for the screen — used on card
-   headers, not on controls. The accent stays uniform across the app. */
+   headers, not on controls. The accent stays uniform across the app.
+
+   `hidden: true` keeps a screen out of the tab bar without removing it. The
+   route still resolves, so its data is untouched, the export still carries it,
+   and the screen is one URL away (#/lifts, #/plan, #/body) if you want it back
+   — flip the flag, or just type the hash. Deleting the view modules instead
+   would have thrown away working code to hide three buttons. */
 const routes = [
   { path: '#/weight', label: 'Weight', title: 'Weight',   icon: 'weight', tint: 'weight', view: weight },
-  { path: '#/lifts',  label: 'Lifts',  title: 'Lifts',    icon: 'lifts',  tint: 'lifts',  view: lifts },
-  { path: '#/plan',   label: 'Plan',   title: 'Training', icon: 'plan',   tint: 'plan',   view: plan },
+  { path: '#/lifts',  label: 'Lifts',  title: 'Lifts',    icon: 'lifts',  tint: 'lifts',  view: lifts,  hidden: true },
+  { path: '#/plan',   label: 'Plan',   title: 'Training', icon: 'plan',   tint: 'plan',   view: plan,   hidden: true },
   { path: '#/food',   label: 'Food',   title: 'Nutrition', icon: 'food',  tint: 'food',   view: food },
-  { path: '#/body',   label: 'Body',   title: 'Body',     icon: 'body',   tint: 'body',   view: body },
+  { path: '#/body',   label: 'Body',   title: 'Body',     icon: 'body',   tint: 'body',   view: body,   hidden: true },
   { path: '#/data',   label: 'Data',   title: 'Data',     icon: 'data',   tint: 'data',   view: data },
 ];
 
@@ -80,8 +86,8 @@ function syncTabs() {
   const bar = document.getElementById('tabbar');
   const here = currentRoute().path;
   bar.hidden = false;
-  mount(bar, 
-    routes.map((r) =>
+  mount(bar,
+    routes.filter((r) => !r.hidden || r.path === here).map((r) =>
       el('a', {
         href: r.path,
         'aria-current': r.path === here ? 'page' : null,

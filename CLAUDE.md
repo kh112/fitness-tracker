@@ -41,6 +41,16 @@ things it must do:
 > constraints: no food database, no barcode scanning, no network. You type your
 > own numbers, and foods remember what you last gave them.
 
+> **Changed 24 Aug 2026:** the Lifts, Plan and Body tabs are **hidden**, not
+> removed. `routes` in `js/app.js` carries `hidden: true` on each; the views,
+> the stores and the export are all untouched, and each screen is still
+> reachable at its hash (`#/lifts`, `#/plan`, `#/body`) — a hidden screen even
+> puts its own tab back in the bar while you are on it, so you can navigate
+> away. Unhide by deleting the flag. Do not delete the view modules.
+
+> **Changed 24 Aug 2026:** an automatic step tracker was asked about and is
+> **not possible here** — see §9. Nothing was built.
+
 ## 3. Features in detail
 
 ### Weight
@@ -79,7 +89,16 @@ things it must do:
 - A single flat daily target, optional. No training-load adjustment — but energy
   needs rise a lot on long-run days, so the target UI is worded as a reference
   rather than a limit
-- Day stepper for back-filling yesterday; 14-day bar chart with the target line
+- Day stepper for back-filling yesterday
+- **The average and the chart both span the whole log, first entry to today**
+  (changed 24 Aug 2026 from a rolling 14 days). The average counts only days
+  that have entries — an unlogged day is a day you forgot, not a day you
+  fasted, and averaging zeros in would quietly halve the number.
+- **Tapping a bar opens that day.** The chart keeps a floor of 16px per day and
+  scrolls sideways past that rather than shrinking bars to hairlines, and opens
+  scrolled to the day you are reading. The bar hit areas are full-height columns
+  and are deliberately *not* keyboard-focusable — a year of logging would be 365
+  tab stops; the day stepper is the keyboard and screen-reader path.
 
 ### Data export
 - A visible "Download my data" button producing a single JSON file of everything
@@ -183,3 +202,27 @@ Ask me these when they become relevant rather than guessing:
 - Race date and plan length (drives the countdown UI)
 - Whether I want dark mode or just one well-chosen theme
 - Whether measurement history needs photos attached (I lean no, but ask)
+
+---
+
+## 9. Step tracking — asked, and the answer is no
+
+Assessed 24 Aug 2026. There is no way for a web app to read a step count on
+either phone, so this cannot be built without abandoning the PWA decision.
+
+- **Apple Health / HealthKit** has no web API at all. Reading steps requires a
+  native app, an Apple developer account, and the App Store — the exact thing
+  §2 chose against.
+- **Health Connect** on Android is likewise native-only.
+- **Google Fit's REST API**, which used to be the one web-reachable option, is
+  shut down.
+- **`DeviceMotionEvent`** (the accelerometer) is reachable from the browser, and
+  counting steps from raw acceleration is a solved problem — but iOS suspends
+  JavaScript the moment the screen locks or you switch apps. It would count
+  steps only while the app is open, awake, and in your hand, which is not a step
+  counter; it is a step counter that stops the second you put your phone away.
+  Building it would produce numbers that look real and are wrong.
+
+If step data is wanted later, the honest options are a manual daily number typed
+in from the phone's own Health app, or importing Apple Health's `export.xml`.
+Both are real work and neither is automatic. Ask before building either.

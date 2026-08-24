@@ -323,6 +323,28 @@ button, input, select, textarea { font: inherit; color: inherit; }
 .chart { width: 100%; display: block; }
 .chart__wrap { position: relative; }
 
+/* A chart that covers every day since you started logging outgrows a phone
+   long before it stops being interesting, so it scrolls sideways instead of
+   compressing to hairlines. The negative margin lets bars run to the card's
+   edges rather than stopping short inside its padding. */
+.chart-scroll {
+  overflow-x: auto;
+  overflow-y: hidden;
+  -webkit-overflow-scrolling: touch;
+  margin: 0 -16px;
+  padding: 0 16px;
+  overscroll-behavior-x: contain;
+  scrollbar-width: thin;
+}
+
+/* Inside the scroller the SVG keeps its own intrinsic width — the 100% above
+   would shrink it back to the viewport and undo the whole point. */
+.chart-scroll > .chart { width: auto; max-width: none; }
+
+/* One invisible full-height rect per day: a 16px bar is a poor thumb target,
+   the column around it is a fine one. */
+.bar-hit { cursor: pointer; }
+
 .chart-legend {
   display: flex;
   gap: 16px;

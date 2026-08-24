@@ -15,10 +15,17 @@ import * as db from '../db.js';
 import { dailyBars } from '../chart.js';
 import { toast, confirmDialog, sheet, sheetHead, navAction, icon } from '../ui.js';
 import {
-  el, mount, todayISO, addDays, fmtDate, fmtDateRelative, isValidISO,
+  el, mount, todayISO, addDays, daysBetween, fmtDate, fmtDateRelative, isValidISO,
 } from '../util.js';
 
-const HISTORY_DAYS = 14;
+/* Minimum width per day on the trend chart. Below this, bars stop being
+   tappable and the chart stops being readable, so past this many days the
+   chart scrolls sideways rather than squeezing. */
+const MIN_SLOT_PX = 16;
+
+/* A stop on the range, not a feature: ten years of daily bars is a runaway
+   loop waiting for a bad imported date, not a chart anyone reads. */
+const MAX_SPAN_DAYS = 3650;
 
 let entries = [];
 let foods = [];
@@ -93,7 +100,8 @@ function heroSection(total, forDay) {
 
     el('div', { class: 'hero__stats' },
       el('div', { class: 'stat' },
-        el('div', { class: 'stat__label', text: `${HISTORY_DAYS}-day average` }),
+        el('div', { class: 'stat__label',
+          text: firstLogDate() ? `Average since ${fmtDate(firstLogDate())}` : 'Daily average' }),
         el('div', { class: 'stat__value', text: `${averageIntake().toLocaleString()} kcal` }),
       ),
       el('button', {
@@ -116,21 +124,47 @@ function shiftDay(n) {
   render(document.getElementById('view'));
 }
 
-/** Mean over days that actually have entries — an unlogged day isn't a zero. */
+/**
+ * Mean over days that actually have entries, across the whole log.
+ *
+ * An unlogged day is not a zero-calorie day — it's a day you didn't write
+ * anything down. Averaging those in would drag the number toward zero and
+ * make a week of forgetting look like a week of fasting.
+ */
 function averageIntake() {
-  const totals = dailyTotals().filter((d) => d.value > 0);
-  if (!totals.length) return 0;
-  return Math.round(totals.reduce((s, d) => s + d.value, 0) / totals.length);
+  const logged = dailyTotals().filter((d) => d.value > 0);
+  if (!logged.length) return 0;
+  return Math.round(logged.reduce((s, d) => s + d.value, 0) / logged.length);
 }
 
+/** The earliest date anything was logged, or null on an empty log. */
+function firstLogDate() {
+  let first = null;
+  for (const entry of entries) {
+    if (first === null || entry.date < first) first = entry.date;
+  }
+  return first;
+}
+
+/** One row per calendar day from the first thing you ever logged to today. */
 function dailyTotals() {
+  const first = firstLogDate();
+  if (!first) return [];
+
   const byDate = new Map();
   for (const entry of entries) {
     byDate.set(entry.date, (byDate.get(entry.date) ?? 0) + entry.kcal);
   }
+
+  const today = todayISO();
+  // Stepping back past the first entry would otherwise put the day you're
+  // reading off the left edge of its own chart.
+  const start = viewDate < first ? viewDate : first;
+  const span = Math.max(0, Math.min(daysBetween(start, today), MAX_SPAN_DAYS));
+
   const out = [];
-  for (let i = HISTORY_DAYS - 1; i >= 0; i--) {
-    const date = addDays(todayISO(), -i);
+  for (let i = span; i >= 0; i--) {
+    const date = addDays(today, -i);
     out.push({ date, value: byDate.get(date) ?? 0, isToday: i === 0 });
   }
   return out;
@@ -140,28 +174,57 @@ function dailyTotals() {
 
 function trendSection() {
   if (entries.length === 0) return null;
-  const host = el('div', { class: 'chart__wrap' });
+
+  const days = dailyTotals();
+  const loggedDays = days.filter((d) => d.value > 0).length;
+  const scroller = el('div', { class: 'chart-scroll' });
 
   // Drawn after mount so the container has a real width to measure.
   queueMicrotask(() => {
-    mount(host, dailyBars({
-      days: dailyTotals(),
+    const svg = dailyBars({
+      days,
       target,
-      width: host.clientWidth || 342,
-    }));
+      width: scroller.clientWidth || 342,
+      selected: viewDate,
+      minSlot: MIN_SLOT_PX,
+      onSelect: (date) => selectDay(date),
+    });
+    mount(scroller, svg);
+
+    // Long logs open scrolled to the day you're reading rather than to the
+    // start of time.
+    const index = days.findIndex((d) => d.date === viewDate);
+    const slot = Number(svg.dataset.slot) || 0;
+    if (index >= 0 && slot) {
+      scroller.scrollLeft =
+        Math.max(0, (index + 0.5) * slot - scroller.clientWidth / 2);
+    }
   });
 
   return el('section', { class: 'section' },
     el('div', { class: 'section__head' },
-      el('h2', { class: 'section__title', text: `Last ${HISTORY_DAYS} days` }),
+      el('h2', { class: 'section__title',
+        text: `Since ${fmtDate(days[0].date)}` }),
       foods.length
         ? el('button', {
           class: 'section__action', type: 'button', onclick: () => openFoodManager(),
           }, 'Foods')
         : null,
     ),
-    el('div', { class: 'panel' }, host),
+    el('div', { class: 'panel' },
+      scroller,
+      el('div', { class: 'muted-note', style: 'margin:10px 0 0' },
+        `${loggedDays} of ${days.length} day${days.length === 1 ? '' : 's'} logged`
+        + '. Tap a bar to open that day.'),
+    ),
   );
+}
+
+/** Jump the whole screen to a day — used by the chart's bars. */
+function selectDay(date) {
+  if (date === viewDate) return;
+  viewDate = date;
+  render(document.getElementById('view'));
 }
 
 /* ------------------------------------------------------------------ meals */

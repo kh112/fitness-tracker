@@ -219,13 +219,28 @@ export function sparkline(points, { width = 78, height = 26, color = 'var(--char
  * question is "how did today compare to the other days", not "what is the
  * smooth trend" — so bars, one per day, gaps included as empty slots.
  *
- * @param {{date: string, value: number}[]} days ascending, one per calendar day
+ * The range is however many days it is given, which for a long log is more
+ * than fits on a phone. Rather than shrinking bars to hairlines, `minSlot`
+ * sets a floor on the per-day width and the SVG is allowed to grow past
+ * `width`; the caller puts it in a horizontal scroller. `svg.dataset.slot`
+ * reports the width used so the caller can scroll a given day into view.
+ *
+ * @param {{date: string, value: number, isToday?: boolean}[]} days ascending, one per calendar day
  * @param {number|null} target
+ * @param {string|null} selected  date to highlight
+ * @param {((date: string) => void)|null} onSelect  tap handler per day
+ * @param {number} minSlot  minimum px per day before the chart starts scrolling
  */
-export function dailyBars({ days, target, width, height = 132 }) {
-  const PAD_T = 12, PAD_B = 18;
-  const w = Math.max(width, 240);
+export function dailyBars({
+  days, target, width, height = 138,
+  selected = null, onSelect = null, minSlot = 0,
+}) {
+  const PAD_T = 18, PAD_B = 18;
+  const viewW = Math.max(width, 240);
   const plotH = height - PAD_T - PAD_B;
+
+  const slot = days.length ? Math.max(viewW / days.length, minSlot) : viewW;
+  const w = days.length ? Math.max(Math.round(slot * days.length), viewW) : viewW;
 
   const svg = s('svg', {
     class: 'chart',
@@ -233,16 +248,34 @@ export function dailyBars({ days, target, width, height = 132 }) {
     width: w, height,
     role: 'img',
     'aria-label': days.length
-      ? `Daily intake for the last ${days.length} days`
+      ? `Daily intake over ${days.length} days`
       : 'Daily intake, nothing logged yet',
   });
+  svg.dataset.slot = String(slot);
   if (days.length === 0) return svg;
 
   const peak = Math.max(...days.map((d) => d.value), target ?? 0, 1);
   const y = (v) => PAD_T + (1 - v / (peak * 1.1)) * plotH;
 
-  const slot = w / days.length;
   const barW = Math.max(3, Math.min(slot - 3, 26));
+
+  /* ---- selected day: a column behind the bar, the way Health marks the day
+         you are reading. Drawn first so everything else sits on top. ---- */
+
+  const selectedIndex = selected === null
+    ? -1
+    : days.findIndex((d) => d.date === selected);
+
+  if (selectedIndex >= 0) {
+    svg.append(s('rect', {
+      x: selectedIndex * slot + 1,
+      y: PAD_T - 6,
+      width: Math.max(slot - 2, 6),
+      height: plotH + 10,
+      rx: 4,
+      fill: 'var(--fill)',
+    }));
+  }
 
   for (const [i, day] of days.entries()) {
     const x = i * slot + (slot - barW) / 2;
@@ -255,7 +288,7 @@ export function dailyBars({ days, target, width, height = 132 }) {
       height: day.value > 0 ? Math.max(2, PAD_T + plotH - top) : 2,
       rx: 3,
       fill: day.value > 0 ? 'var(--chart-line)' : 'var(--chart-empty)',
-      opacity: day.isToday ? 1 : 0.72,
+      opacity: (i === selectedIndex || day.isToday) ? 1 : 0.6,
     }));
   }
 
@@ -269,18 +302,67 @@ export function dailyBars({ days, target, width, height = 132 }) {
     }));
   }
 
-  // First and last day labels only — anything more is unreadable at this size.
-  const label = (text, x, anchor) => {
+  /* ---- x labels: as many as fit without colliding, always including the
+         last day so the right edge is never unlabelled ---- */
+
+  const label = (text, x, anchor, cls) => {
     const node = s('text', {
       x, y: height - 4, 'text-anchor': anchor,
-      fill: 'var(--label-3)', 'font-size': 10, 'font-weight': 600,
+      fill: cls === 'sel' ? 'var(--label)' : 'var(--label-3)',
+      'font-size': 10,
+      'font-weight': cls === 'sel' ? 700 : 600,
     });
     node.textContent = text;
     return node;
   };
-  svg.append(label(fmtDate(days[0].date), 0, 'start'));
-  if (days.length > 1) {
-    svg.append(label(fmtDate(days[days.length - 1].date), w, 'end'));
+
+  const labelStep = Math.max(1, Math.ceil(52 / slot));
+  const labelled = new Set();
+  for (let i = days.length - 1; i >= 0; i -= labelStep) {
+    labelled.add(i);
+    const cx = i * slot + slot / 2;
+    const anchor = cx < 22 ? 'start' : cx > w - 22 ? 'end' : 'middle';
+    svg.append(label(fmtDate(days[i].date), Math.min(Math.max(cx, 0), w), anchor,
+      i === selectedIndex ? 'sel' : null));
+  }
+  // The selected day always names itself, even between label stops.
+  if (selectedIndex >= 0 && !labelled.has(selectedIndex)) {
+    const cx = selectedIndex * slot + slot / 2;
+    const anchor = cx < 22 ? 'start' : cx > w - 22 ? 'end' : 'middle';
+    svg.append(label(fmtDate(days[selectedIndex].date), cx, anchor, 'sel'));
+  }
+
+  /* ---- the selected day's number, above its bar ---- */
+
+  if (selectedIndex >= 0 && days[selectedIndex].value > 0) {
+    const day = days[selectedIndex];
+    const cx = selectedIndex * slot + slot / 2;
+    const node = s('text', {
+      x: Math.min(Math.max(cx, 16), w - 16),
+      y: Math.max(y(day.value) - 5, 11),
+      'text-anchor': cx < 16 ? 'start' : cx > w - 16 ? 'end' : 'middle',
+      fill: 'var(--label)', 'font-size': 11, 'font-weight': 700,
+    });
+    node.textContent = day.value.toLocaleString();
+    svg.append(node);
+  }
+
+  /* ---- tap targets ----
+     One invisible full-height rect per day, so a thin bar is still easy to
+     hit with a thumb. Deliberately not focusable: a year of logging would be
+     365 tab stops, and the day stepper above the chart is the keyboard and
+     screen-reader path to the same thing. */
+
+  if (onSelect) {
+    for (const [i, day] of days.entries()) {
+      const hit = s('rect', {
+        x: i * slot, y: 0, width: slot, height,
+        fill: 'transparent',
+        class: 'bar-hit',
+      });
+      hit.addEventListener('click', () => onSelect(day.date));
+      svg.append(hit);
+    }
   }
 
   return svg;
