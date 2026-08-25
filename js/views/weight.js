@@ -45,7 +45,7 @@ function heroSection() {
   const latest = rows[rows.length - 1];
   const avg = rollingAverage(rows, 7);
   const latestAvg = avg[avg.length - 1].avg;
-  const change = sinceStart(avg);
+  const change = sinceStart();
 
   return el('section', { class: 'panel hero' },
     el('div', {},
@@ -74,23 +74,28 @@ function heroSection() {
 /**
  * Change since the first weigh-in, as a total and as a daily rate.
  *
- * The far end is the 7-day average rather than today's raw reading, so one
- * dehydrated morning can't read as progress. The near end is the first entry
- * itself — the trailing average of a single point *is* that point — which is
- * the honest reading of "since the start": it's the number you'd get comparing
- * the app's first row to its last. The cost is that a bad first weigh-in
- * skews every since-the-start figure for good, which is a fair trade against
- * a starting point you can't reconcile with your own log.
+ * Both ends are the readings as logged: last row minus first row. That is what
+ * "since 2 Jun" means to anyone who can scroll down and see those two rows,
+ * and a headline figure you cannot reconcile against your own log is worse
+ * than a noisy one.
+ *
+ * This used to smooth the far end with the 7-day average while leaving the
+ * near end raw, meaning to keep one dehydrated morning from reading as
+ * progress. Subtracting an average from a point is not a smoothed comparison
+ * though, it is a mismatched one, and it understates every time — on a log
+ * shorter than the 7-day window it reported almost exactly half the real
+ * change. The smoothed view still exists where it belongs: the 7-day average
+ * is in the line under the big number, and it is the line on the chart.
  *
  * Both are null until there are two entries on different days, because a rate
  * over a zero-day span is a division by zero wearing a label.
  */
-function sinceStart(avg) {
-  if (avg.length < 2) return { total: null, perDay: null };
+function sinceStart() {
+  if (rows.length < 2) return { total: null, perDay: null };
 
-  const first = avg[0];
-  const last = avg[avg.length - 1];
-  const total = last.avg - first.avg;
+  const first = rows[0];
+  const last = rows[rows.length - 1];
+  const total = last.kg - first.kg;
   const days = daysBetween(first.date, last.date);
 
   return { total, perDay: days > 0 ? total / days : null };

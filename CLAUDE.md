@@ -62,11 +62,14 @@ things it must do:
 - **The two hero tiles both run since the first weigh-in** (changed 24 Aug 2026
   from rolling 7-day and 30-day windows): average change per day **in grams**
   (`-36g`, no unit suffix beyond the g), and total change in kg since that
-  date. The far end of both is the 7-day average, so one dehydrated morning
-  can't read as progress; the near end is the first entry itself. On a log only
-  a few days old that makes the total differ from first-row-minus-last-row —
-  the averaging is the point, and the hero line above the tiles shows the
-  average it used.
+  date. **Both ends are the readings as logged** — last row minus first row,
+  so the tile always reconciles against the entries listed below it. An
+  attempt to smooth the far end with the 7-day average while leaving the near
+  end raw shipped on 24 Aug and was wrong: subtracting an average from a point
+  understates every time, and on a log shorter than the 7-day window it
+  reported about half the real change. Don't reintroduce it. The smoothed view
+  lives where it belongs — the 7-day average under the big number, and the
+  average line on the chart.
 - **No chart range picker** (removed 24 Aug 2026). The chart always draws the
   whole log; the section head names the span. The `.segmented` CSS went with
   it — nothing else used it.
