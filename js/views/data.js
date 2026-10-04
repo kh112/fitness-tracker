@@ -6,6 +6,7 @@
  */
 
 import * as backup from '../backup.js';
+import { clearStores } from '../db.js';
 import { toast, confirmDialog, sheet, sheetHead, icon } from '../ui.js';
 import { el, mount, fmtDateRelative, todayISO } from '../util.js';
 
@@ -62,8 +63,53 @@ export async function render(view) {
       ),
 
       appSection(),
+
+      resetSection(counts),
     ),
   );
+}
+
+/* ----------------------------------------------------------------- reset */
+
+function resetSection(counts) {
+  return el('section', { class: 'section' },
+    el('h2', { class: 'section__title', text: 'Start over' }),
+    el('div', { class: 'panel stack' },
+      el('div', { class: 'muted-note' },
+        'Deletes every weigh-in and every food entry. The foods you have typed '
+        + 'before are kept, so their names and calories still autocomplete. '
+        + 'Lifts, runs and measurements are not touched.'),
+      el('button', {
+        class: 'btn btn--danger btn--block', type: 'button',
+        onclick: () => resetLog(counts),
+      }, 'Reset weight and calories'),
+    ),
+  );
+}
+
+async function resetLog(counts) {
+  const weighIns = counts.weights ?? 0;
+  const entries = counts.foodEntries ?? 0;
+  if (weighIns + entries === 0) { toast('Nothing to reset'); return; }
+
+  const ok = await confirmDialog({
+    title: 'Reset weight and calories?',
+    body: `This deletes ${weighIns} weigh-in${weighIns === 1 ? '' : 's'} and `
+        + `${entries} food entr${entries === 1 ? 'y' : 'ies'} for good. `
+        + 'Download a backup first if you might want them back.',
+    confirmLabel: 'Delete them',
+    danger: true,
+  });
+  if (!ok) return;
+
+  try {
+    await clearStores(['weights', 'foodEntries']);
+    toast('Weight and calories reset');
+    await render(document.getElementById('view'));
+  } catch (err) {
+    console.error(err);
+    toast('Reset failed — nothing was changed');
+  }
 }
 
 /* ------------------------------------------------------------------- app */

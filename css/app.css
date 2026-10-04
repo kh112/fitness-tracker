@@ -621,6 +621,7 @@ dialog.sheet::backdrop { background: rgba(0, 0, 0, 0.35); }
   cursor: pointer;
 }
 .btn:active { opacity: 0.6; }
+.btn svg { width: 20px; height: 20px; vertical-align: -4px; }
 
 .btn--primary { background: var(--accent-bright); color: var(--accent-ink); }
 .btn--danger  { color: var(--bad); font-weight: 400; }
@@ -1078,7 +1079,12 @@ dialog.sheet::backdrop { background: rgba(0, 0, 0, 0.35); }
   gap: 12px;
 }
 
-.filesel { position: relative; overflow: hidden; }
+/* A <label>, not a <button>, so it doesn't centre its text by itself. */
+.filesel {
+  position: relative; overflow: hidden;
+  display: flex; align-items: center; justify-content: center;
+  white-space: pre;
+}
 .filesel input[type="file"] {
   position: absolute; inset: 0;
   opacity: 0;

@@ -189,6 +189,18 @@ export async function removeByIndex(store, index, value) {
   });
 }
 
+/** Empty several stores in ONE transaction — all of them clear, or none do. */
+export async function clearStores(stores) {
+  const db = await openDB();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(stores, 'readwrite');
+    for (const store of stores) tx.objectStore(store).clear();
+    tx.oncomplete = () => resolve();
+    tx.onerror = () => reject(tx.error);
+    tx.onabort = () => reject(tx.error || new Error('Transaction aborted'));
+  });
+}
+
 const byDate = (a, b) => (a.date < b.date ? -1 : a.date > b.date ? 1 : 0);
 
 /* ------------------------------------------------------------------ weights */

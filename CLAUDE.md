@@ -144,6 +144,10 @@ the phone and the repo disagree about what shipped, that line is where to look.
   gentle reminder if the user hasn't exported in a month
 - Also build the matching import, so a restore from that file actually works. An export
   you can't re-import is a placebo.
+- **Reset weight and calories** (added 4 Oct 2026), at the bottom of the Data
+  tab: clears `weights` and `foodEntries` in one transaction. It deliberately
+  keeps `foods`, so names and remembered kcal still autocomplete. Lifts, runs
+  and measurements are untouched.
 
 ## 4. Data model (starting point, change it if you have a better one)
 
